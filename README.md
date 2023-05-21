@@ -9,6 +9,15 @@ Build
     $ make
 
 
+Add pact-erlang as a dependency in your application
+---------------------------------------------------
+```
+{erl_opts, [debug_info]}.
+{deps,[
+    {pact_erlang, ".*", {git, "https://github.com/silverblaze404/pact_erlang.git", {branch, "develop"}}}
+]}.
+```
+
 Usage
 -----
 
