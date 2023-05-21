@@ -40,7 +40,7 @@ assertEqual({ok, matched}, pact:verify(1234)).
 
 
 %% Should write Pact File if matched
-pact:write_pact_file(PactRef, "/Users/priyaranjan.m/Work/grey_orange/greymatter-api-docs/pact-erlang-poc/consumer_server/pacts", 0)
+pact:write_pact_file(PactRef, "/Users/priyaranjan.m/pacts", 0)
 
 %% Cleanup test setup
 %% This won't cleanup the pact files, only the pact ref you created in the test setup
