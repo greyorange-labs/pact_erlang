@@ -1,4 +1,4 @@
-pact_erlang
+pact-erlang
 =====
 
 An OTP library
