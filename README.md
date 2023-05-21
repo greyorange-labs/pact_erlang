@@ -6,7 +6,7 @@ An OTP library
 Build
 -----
 
-    $ rebar3 compile
+    $ make
 
 
 Usage
