@@ -13,6 +13,7 @@ Usage
 -----
 
 
+```erlang
 %% Setup
 %% Define pact consumer and producer
 PactRef = pact:create_new_pact(<<"consumer">>, <<"producer">>).
@@ -45,3 +46,4 @@ pact:write_pact_file(PactRef, "/Users/priyaranjan.m/Work/grey_orange/greymatter-
 %% This won't cleanup the pact files, only the pact ref you created in the test setup
 pact:cleanup_mock_server()
 pact:cleanup_pact()
+```
