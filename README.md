@@ -49,12 +49,12 @@ assertEqual({ok, matched}, pact:verify(1234)).
 
 
 %% Should write Pact File if matched
-pact:write_pact_file(PactRef, "/Users/priyaranjan.m/pacts", 0)
+pact:write_pact_file(PactRef, "/Users/priyaranjan.m/pacts")
 
 %% Cleanup test setup
 %% This won't cleanup the pact files, only the pact ref you created in the test setup
-pact:cleanup_mock_server()
-pact:cleanup_pact()
+pact:cleanup_mock_server(1234)
+pact:cleanup_pact(PactRef)
 ```
 Matching request/response path, headers, and body values
 -----
