@@ -56,3 +56,8 @@ pact:write_pact_file(PactRef, "/Users/priyaranjan.m/pacts", 0)
 pact:cleanup_mock_server()
 pact:cleanup_pact()
 ```
+Matching request/response path, headers, and body values
+-----
+
+For now the matchers module is not implemented, but we can very much match values.
+Refer source - https://github.com/pact-foundation/pact-reference/blob/master/rust/pact_ffi/IntegrationJson.md
