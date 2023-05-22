@@ -32,7 +32,7 @@ InteractionRef = pact:create_new_interaction(PactRef, <<"/users api desc">>).
 
 %% Define interaction's request method, path, response content type and body as well as response code
 pact:with_request(InteractionRef, <<"GET">>, <<"/users">>).
-ResponseJsonString = jsx:encode(#{auth_id => 1}).
+ResponseJsonString = jsx:encode(#{user_id => 1, user_name => <<"ranjan">>, age => 26}).
 pact:with_response_body(InteractionRef, <<"application/json">>, ResponseJsonString).
 pact:with_response_status(InteractionRef, 200).
 
