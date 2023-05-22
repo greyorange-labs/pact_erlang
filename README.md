@@ -56,7 +56,7 @@ pact:write_pact_file(PactRef, "/Users/priyaranjan.m/pacts")
 pact:cleanup_mock_server(1234)
 pact:cleanup_pact(PactRef)
 ```
-Matching request/response path, headers, and body values
+Matching request path and request/response headers, and body values
 -----
 
 For now the matchers module is not implemented, but we can very much match values.
