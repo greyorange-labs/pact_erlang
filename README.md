@@ -1,7 +1,7 @@
 pact-erlang
 =====
 
-An OTP library
+An OTP library for contract testing using pact and generating consumer pacts 
 
 Build
 -----
