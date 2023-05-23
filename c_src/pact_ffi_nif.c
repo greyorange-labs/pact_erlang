@@ -369,6 +369,42 @@ static ERL_NIF_TERM erl_pactffi_free_pact_handle(ErlNifEnv *env, int argc, const
     return enif_make_atom(env, "ok");
 }
 
+static ERL_NIF_TERM erl_pactffi_with_query_parameter_v2(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    int interaction_ref = convert_erl_int_to_c_int(env, argv[0]);
+    InteractionHandle interactH = interaction_ref;
+    if (!enif_is_binary(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *name = convert_erl_binary_to_c_string(env, argv[1]);
+
+    if (!enif_is_number(env, argv[2]))
+    {
+        return enif_make_badarg(env);
+    }
+    int index = convert_erl_int_to_c_int(env, argv[2]);
+
+    if (!enif_is_binary(env, argv[3]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *value = convert_erl_binary_to_c_string(env, argv[3]);
+
+    if (pactffi_with_query_parameter_v2(interactH, name, index, value))
+    {
+        return enif_make_tuple2(env, enif_make_atom(env, "ok"), enif_make_atom(env, "query_param_added"));
+    }
+    else
+    {
+        return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_atom(env, "cannot_add_query_param"));
+    }
+}
+
 static ErlNifFunc nif_funcs[] =
     {
         {"erl_pactffi_version", 0, erl_pactffi_version},
@@ -387,6 +423,8 @@ static ErlNifFunc nif_funcs[] =
         {"erl_pactffi_log_to_file", 2, erl_pactffi_log_to_file},
         {"erl_pactffi_pact_handle_write_file", 3, erl_pactffi_pact_handle_write_file},
         {"erl_pactffi_cleanup_mock_server", 1, erl_pactffi_cleanup_mock_server},
-        {"erl_pactffi_free_pact_handle", 1, erl_pactffi_free_pact_handle}};
+        {"erl_pactffi_free_pact_handle", 1, erl_pactffi_free_pact_handle},
+        {"erl_pactffi_with_query_parameter_v2", 4, erl_pactffi_with_query_parameter_v2}
+    };
 
 ERL_NIF_INIT(pact_ffi_nif, nif_funcs, NULL, NULL, NULL, NULL)
