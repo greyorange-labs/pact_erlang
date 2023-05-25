@@ -121,6 +121,29 @@ static ERL_NIF_TERM erl_pactffi_new_interaction(ErlNifEnv *env, int argc, const 
     return enif_make_int(env, interactionhandle);
 }
 
+static ERL_NIF_TERM erl_pactffi_given(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    int interaction_ref = convert_erl_int_to_c_int(env, argv[0]);
+    if (!enif_is_binary(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *provider_state = convert_erl_binary_to_c_string(env, argv[1]);
+    InteractionHandle interactionhandle = interaction_ref;
+    if(pactffi_given(interactionhandle, provider_state))
+    {
+        return enif_make_tuple2(env, enif_make_atom(env, "ok"), enif_make_atom(env, "provider_state_added"));
+    }
+    else
+    {
+        return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_atom(env, "cannot_provider_state"));
+    }
+}
+
 static ERL_NIF_TERM erl_pactffi_with_request(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     if (!enif_is_number(env, argv[0]))
@@ -424,7 +447,8 @@ static ErlNifFunc nif_funcs[] =
         {"erl_pactffi_pact_handle_write_file", 3, erl_pactffi_pact_handle_write_file},
         {"erl_pactffi_cleanup_mock_server", 1, erl_pactffi_cleanup_mock_server},
         {"erl_pactffi_free_pact_handle", 1, erl_pactffi_free_pact_handle},
-        {"erl_pactffi_with_query_parameter_v2", 4, erl_pactffi_with_query_parameter_v2}
+        {"erl_pactffi_with_query_parameter_v2", 4, erl_pactffi_with_query_parameter_v2},
+        {"erl_pactffi_given", 2, erl_pactffi_given}
     };
 
 ERL_NIF_INIT(pact_ffi_nif, nif_funcs, NULL, NULL, NULL, NULL)

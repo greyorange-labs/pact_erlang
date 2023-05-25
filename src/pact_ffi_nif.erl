@@ -19,7 +19,8 @@
     erl_pactffi_pact_handle_write_file/3,
     erl_pactffi_cleanup_mock_server/1,
     erl_pactffi_free_pact_handle/1,
-    erl_pactffi_with_query_parameter_v2/4
+    erl_pactffi_with_query_parameter_v2/4,
+    erl_pactffi_given/2
 ]).
 
 % Import the NIF functions from the C library
@@ -41,7 +42,8 @@
     erl_pactffi_pact_handle_write_file/3,
     erl_pactffi_cleanup_mock_server/1,
     erl_pactffi_free_pact_handle/1,
-    erl_pactffi_with_query_parameter_v2/4
+    erl_pactffi_with_query_parameter_v2/4,
+    erl_pactffi_given/2
 ]).
 -on_load(init/0).
 
@@ -104,4 +106,7 @@ erl_pactffi_free_pact_handle(_) ->
     erlang:nif_error("NIF library not loaded").
 
 erl_pactffi_with_query_parameter_v2(_, _, _, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+erl_pactffi_given(_, _) ->
     erlang:nif_error("NIF library not loaded").

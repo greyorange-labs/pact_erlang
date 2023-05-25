@@ -21,7 +21,8 @@
     write_pact_file/2,
     cleanup_mock_server/1,
     cleanup_pact/1,
-    with_query_parameter/4
+    with_query_parameter/4,
+    given/2
 ]).
 
 
@@ -84,3 +85,6 @@ cleanup_pact(PactRef) ->
 
 with_query_parameter(InteractionRef, Name, Index, Value) ->
     pact_ffi_nif:erl_pactffi_with_query_parameter_v2(InteractionRef, Name, Index, Value).
+
+given(InteractionRef, State) ->
+    pact_ffi_nif:erl_pactffi_given(InteractionRef, State).
