@@ -163,19 +163,19 @@ static ERL_NIF_TERM erl_pactffi_with_header_v2(ErlNifEnv *env, int argc, const E
     {
         return enif_make_badarg(env);
     }
-    char *header_key = convert_erl_binary_to_c_string(env, argv[1]);
+    char *header_key = convert_erl_binary_to_c_string(env, argv[2]);
 
     if (!enif_is_number(env, argv[3]))
     {
         return enif_make_badarg(env);
     }
-    int header_value_index = convert_erl_int_to_c_int(env, argv[2]);
+    int header_value_index = convert_erl_int_to_c_int(env, argv[3]);
 
     if (!enif_is_binary(env, argv[4]))
     {
         return enif_make_badarg(env);
     }
-    char *header_value = convert_erl_binary_to_c_string(env, argv[3]);
+    char *header_value = convert_erl_binary_to_c_string(env, argv[4]);
 
     if (!enif_is_number(env, argv[1]))
     {
