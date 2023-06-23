@@ -37,24 +37,25 @@ LIBRARY_PATH := $(LIBRARY_BASE_PATH)/$(PACT_FILE_NAME)
 PACT_VERSION_FILE := $(LIBRARY_BASE_PATH)/.pact-ffi-version-$(PACT_FFI_VERSION)
 
 all: $(TARGET)
+	@:
 
 $(TARGET): $(SRC) $(LIBRARY_PATH)
 	@mkdir -p $(BASEDIR)/priv/
 	@$(CC) $(CFLAGS) $(TARGET) $(SRC) -I$(ERTS_INCLUDE_DIR) -I$(PACT_INCLUDE_PATH) $(LIBRARY_PATH)
 
-$(LIBRARY_PATH): $(PACT_VERSION_FILE) $(LIBRARY_BASE_PATH)
+$(LIBRARY_PATH): $(PACT_VERSION_FILE)
+	@mkdir -p $(LIBRARY_BASE_PATH)
 	@rm -f $(LIBRARY_PATH)
 	@rm -f $(LIBRARY_PATH).gz
 	@echo "Fetching libpact_ffi..."
 	@curl -sS -L $(DOWNLOAD_URL) -o $(LIBRARY_PATH).gz
 	@gzip -d $(LIBRARY_PATH).gz
+	@echo "Done"
 
-$(PACT_VERSION_FILE): $(LIBRARY_BASE_PATH)
+$(PACT_VERSION_FILE):
+	@mkdir -p $(LIBRARY_BASE_PATH)
 	@rm -f $(LIBRARY_BASE_PATH)/.pact-ffi-version-*
 	@touch $(PACT_VERSION_FILE)
-
-$(LIBRARY_BASE_PATH):
-	@mkdir -p $(LIBRARY_BASE_PATH)
 
 clean:
 	@rm -f $(TARGET)
