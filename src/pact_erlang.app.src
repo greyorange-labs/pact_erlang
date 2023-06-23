@@ -1,14 +1,15 @@
 {application, pact_erlang,
- [{description, "An OTP library"},
-  {vsn, "0.1.0"},
+ [{description, "Erlang wrapper for Pact. Pact is a contract testing framework for HTTP APIs and non-HTTP asynchronous messaging systems."},
+  {vsn, "git"},
+  {modules, []},
   {registered, []},
   {applications,
    [kernel,
     stdlib
    ]},
-  {env,[]},
-  {modules, []},
 
   {licenses, ["Apache-2.0"]},
-  {links, []}
+  {links, [{"GitHub", "https://github.com/greyorange-labs/pact-erlang"}]},
+  {build_tools, ["rebar3"]},
+  {files, ["src", "c_src", "rebar.config", "README.md","LICENSE", "Makefile"]}
  ]}.

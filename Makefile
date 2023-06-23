@@ -14,4 +14,7 @@ test:
 dialyzer:
 	@$(REBAR) as dialyzer dialyzer
 
+hex-build:
+	@$(REBAR) hex build
+
 .PHONY: all compile clean test dialyzer
