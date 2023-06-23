@@ -59,6 +59,15 @@ jobs:
       run: brew update
     - name: Install Erlang
       run: brew install erlang
+    - name: Deps cache
+      id: cache-deps
+      uses: actions/cache@v3
+      with:
+        path: |
+          priv
+          _build
+        key: ${{ runner.os }}-deps-${{ hashFiles('**/rebar.lock', '**/Makefile') }}
+        restore-keys: ${{ runner.os }}-deps-
     - name: Compile
       run: make
     - name: Run tests
