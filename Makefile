@@ -1,15 +1,17 @@
-.PHONY: compile clean test
+REBAR?=rebar3
 
 all: compile
 
 compile:
-	@./rebar3 compile
+	@$(REBAR) compile
 
 clean:
-	@./rebar3 clean
+	@$(REBAR) clean
 
 test:
-	@./rebar3 eunit
+	@$(REBAR) eunit
 
 dialyzer:
-	@./rebar3 as dialyzer dialyzer
+	@$(REBAR) as dialyzer dialyzer
+
+.PHONY: all compile clean test dialyzer
