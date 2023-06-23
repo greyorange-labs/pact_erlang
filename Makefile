@@ -14,4 +14,4 @@ test:
 dialyzer:
 	@$(REBAR) as dialyzer dialyzer
 
-.PHONY: all compile clean test
+.PHONY: all compile clean test dialyzer
