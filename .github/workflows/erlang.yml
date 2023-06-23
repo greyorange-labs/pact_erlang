@@ -10,17 +10,56 @@ permissions:
   contents: read
 
 jobs:
+  linux:
+    name: Test on OTP ${{ matrix.otp_version }} and ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
 
-  build:
-
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        otp_version: [25, 26]
+        os: [ubuntu-latest]
 
     container:
-      image: erlang:26.0.0.0
+      image: erlang:${{ matrix.otp_version }}
+
+    env:
+      LATEST_OTP_RELEASE: 26
 
     steps:
     - uses: actions/checkout@v3
+    - name: Deps cache
+      id: cache-deps
+      uses: actions/cache@v3
+      with:
+        path: |
+          priv
+          _build
+        key: ${{ runner.os }}-${{ matrix.os }}-${{ matrix.otp_version }}-deps-${{ hashFiles('**/rebar.lock', '**/Makefile') }}
+        restore-keys: ${{ runner.os }}-${{ matrix.os }}-${{ matrix.otp_version }}-deps-
+    - name: Clean
+      run: make clean
     - name: Compile
       run: make
     - name: Run tests
-      run: rebar3 do eunit, ct
+      run: make test
+    - name: Dialyzer
+      shell: bash
+      run: |
+        [[ "${{ matrix.otp_version }}" != "${{ env.LATEST_OTP_RELEASE }}" ]] || (make dialyzer)
+
+  macos:
+    name: Test on MacOS
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Brew Version Check
+      run: brew --version
+    - name: Keep Brew Fresh
+      run: brew update
+    - name: Install Erlang
+      run: brew install erlang
+    - name: Compile
+      run: make
+    - name: Run tests
+      run: make test

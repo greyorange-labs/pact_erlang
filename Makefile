@@ -10,3 +10,6 @@ clean:
 
 test:
 	@./rebar3 eunit
+
+dialyzer:
+	@./rebar3 as dialyzer dialyzer
