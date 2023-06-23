@@ -7,6 +7,7 @@ compile:
 
 clean:
 	@$(REBAR) clean
+	@rm -rf doc
 
 test:
 	@$(REBAR) eunit
