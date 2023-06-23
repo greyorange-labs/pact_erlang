@@ -3,6 +3,8 @@ pact-erlang
 
 An erlang library for contract testing using pact ffi and generating consumer pacts 
 
+Docs: https://hexdocs.pm/pact_erlang/readme.html
+
 Build
 -----
 
@@ -12,10 +14,7 @@ Build
 Add pact-erlang as a dependency in your application
 ---------------------------------------------------
 ```
-{erl_opts, [debug_info]}.
-{deps,[
-    {pact_erlang, ".*", {git, "https://github.com/silverblaze404/pact_erlang.git", {branch, "develop"}}}
-]}.
+{deps, [pact_erlang]}.
 ```
 
 Usage
