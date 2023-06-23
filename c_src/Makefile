@@ -36,8 +36,6 @@ TARGET := $(BASEDIR)/priv/libpact_ffi.so
 LIBRARY_PATH := $(LIBRARY_BASE_PATH)/$(PACT_FILE_NAME)
 PACT_VERSION_FILE := $(LIBRARY_BASE_PATH)/.pact-ffi-version-$(PACT_FFI_VERSION)
 
-.PHONY: all clean
-
 all: $(TARGET)
 
 $(TARGET): $(SRC) $(LIBRARY_PATH)
@@ -47,7 +45,8 @@ $(TARGET): $(SRC) $(LIBRARY_PATH)
 $(LIBRARY_PATH): $(PACT_VERSION_FILE) $(LIBRARY_BASE_PATH)
 	@rm -f $(LIBRARY_PATH)
 	@rm -f $(LIBRARY_PATH).gz
-	@curl -L $(DOWNLOAD_URL) -o $(LIBRARY_PATH).gz
+	@echo "Fetching libpact_ffi..."
+	@curl -sS -L $(DOWNLOAD_URL) -o $(LIBRARY_PATH).gz
 	@gzip -d $(LIBRARY_PATH).gz
 
 $(PACT_VERSION_FILE): $(LIBRARY_BASE_PATH)
@@ -61,3 +60,5 @@ clean:
 	@rm -f $(TARGET)
 	@rm -f $(LIBRARY_PATH)
 	@rm -f $(PACT_VERSION_FILE)
+
+.PHONY: all clean
