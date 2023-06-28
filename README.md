@@ -1,7 +1,9 @@
 pact-erlang
 =====
 
-An erlang library for contract testing using pact ffi and generating consumer pacts 
+An erlang library for contract testing using pact ffi and generating consumer pacts.
+
+This library should be considered alpha quality. It is not yet feature complete and the API is subject to change.
 
 Docs: https://hexdocs.pm/pact_erlang/readme.html
 
