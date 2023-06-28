@@ -15,6 +15,7 @@
     erl_pactffi_response_status/2,
     erl_pactffi_create_mock_server_for_transport/4,
     erl_pactffi_mock_server_matched/1,
+    erl_pactffi_mock_server_mismatches/1,
     erl_pactffi_log_to_file/2,
     erl_pactffi_pact_handle_write_file/3,
     erl_pactffi_cleanup_mock_server/1,
@@ -38,6 +39,7 @@
     erl_pactffi_response_status/2,
     erl_pactffi_create_mock_server_for_transport/4,
     erl_pactffi_mock_server_matched/1,
+    erl_pactffi_mock_server_mismatches/1,
     erl_pactffi_log_to_file/2,
     erl_pactffi_pact_handle_write_file/3,
     erl_pactffi_cleanup_mock_server/1,
@@ -91,6 +93,9 @@ erl_pactffi_create_mock_server_for_transport(_, _, _, _) ->
     erlang:nif_error("NIF library not loaded").
 
 erl_pactffi_mock_server_matched(_) ->
+    erlang:nif_error("NIF library not loaded").
+
+erl_pactffi_mock_server_mismatches(_) ->
     erlang:nif_error("NIF library not loaded").
 
 erl_pactffi_log_to_file(_, _) ->

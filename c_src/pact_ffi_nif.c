@@ -323,6 +323,24 @@ static ERL_NIF_TERM erl_pactffi_mock_server_matched(ErlNifEnv *env, int argc, co
     }
 }
 
+static ERL_NIF_TERM erl_pactffi_mock_server_mismatches(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    int mock_server_port = convert_erl_int_to_c_int(env, argv[0]);
+    char *mismatches = pactffi_mock_server_mismatches(mock_server_port);
+    if (mismatches != NULL)
+    {
+        return enif_make_string(env, mismatches, ERL_NIF_LATIN1);
+    }
+    else
+    {
+        return enif_make_atom(env, "undefined");
+    }
+}
+
 static ERL_NIF_TERM erl_pactffi_pact_handle_write_file(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     if (!enif_is_number(env, argv[0]))
@@ -443,6 +461,7 @@ static ErlNifFunc nif_funcs[] =
         {"erl_pactffi_response_status", 2, erl_pactffi_response_status},
         {"erl_pactffi_create_mock_server_for_transport", 4, erl_pactffi_create_mock_server_for_transport},
         {"erl_pactffi_mock_server_matched", 1, erl_pactffi_mock_server_matched},
+        {"erl_pactffi_mock_server_mismatches", 1, erl_pactffi_mock_server_mismatches},
         {"erl_pactffi_log_to_file", 2, erl_pactffi_log_to_file},
         {"erl_pactffi_pact_handle_write_file", 3, erl_pactffi_pact_handle_write_file},
         {"erl_pactffi_cleanup_mock_server", 1, erl_pactffi_cleanup_mock_server},

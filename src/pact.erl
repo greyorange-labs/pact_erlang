@@ -17,6 +17,7 @@
     with_response_body/3,
     create_mock_server_for_transport/4,
     verify/1,
+    get_mismatches/1,
     pactffi_log_to_file/2,
     write_pact_file/2,
     cleanup_mock_server/1,
@@ -70,6 +71,15 @@ create_mock_server_for_transport(PactRef, Address, Port, TransportType) ->
 
 verify(MockServerPort) ->
     pact_ffi_nif:erl_pactffi_mock_server_matched(MockServerPort).
+
+get_mismatches(MockServerPort) ->
+    case pact_ffi_nif:erl_pactffi_mock_server_mismatches(MockServerPort) of
+        undefined ->
+            [];
+        Json ->
+            {ok, Mismatches} = thoas:decode(Json),
+            Mismatches
+    end.
 
 pactffi_log_to_file(FilePath, LogLevel) ->
     pact_ffi_nif:erl_pactffi_log_to_file(FilePath, LogLevel).
