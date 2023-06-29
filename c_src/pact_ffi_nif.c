@@ -3,7 +3,7 @@
 #include <pact.h>
 #include <string.h>
 
-char *convert_erl_binary_to_c_string(ErlNifEnv *env, ERL_NIF_TERM binary_term)
+static char *convert_erl_binary_to_c_string(ErlNifEnv *env, ERL_NIF_TERM binary_term)
 {
     ErlNifBinary binary;
     char *str;
@@ -23,7 +23,7 @@ char *convert_erl_binary_to_c_string(ErlNifEnv *env, ERL_NIF_TERM binary_term)
     return str;
 }
 
-int convert_erl_int_to_c_int(ErlNifEnv *env, ERL_NIF_TERM int_term)
+static int convert_erl_int_to_c_int(ErlNifEnv *env, ERL_NIF_TERM int_term)
 {
     int c_int;
     enif_get_int(env, int_term, &c_int);
