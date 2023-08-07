@@ -32,7 +32,7 @@ ifeq ($(UNAME),Darwin)
 endif
 PACT_FFI_URL := $(PACT_FFI_BASE_URL)/$(PACT_FILE_NAME).gz
 
-SRC := pact_ffi_nif.c
+SRC := pactffi_nif.c
 TARGET := $(BASEDIR)/priv/libpact_ffi.so
 LIBRARY_PATH := $(LIBRARY_BASE_PATH)/$(PACT_FILE_NAME)
 PACT_VERSION_FILE := $(LIBRARY_BASE_PATH)/.pact-ffi-version-$(PACT_FFI_VERSION)

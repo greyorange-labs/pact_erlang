@@ -11,15 +11,24 @@
 ]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
+-type pact_ref() :: integer().
+-type pact_interaction_ref() :: integer().
+-type consumer() :: binary().
+-type provider() :: binary().
+-type pact_interaction_details() :: map(). 
+-type pact_interaction() :: {pact_interaction_ref(), pact_interaction_details()}.
+-type pact_mock_server_port() :: integer().
+
 -record(pact_state, {
-    consumer,
-    producer,
-    pact_ref = undefined,
-    interaction = {undefined, #{}},
-    mock_server_port = undefined
+    consumer                        :: consumer(),
+    producer                        :: provider(),
+    pact_ref = undefined            :: undefined | pact_ref(),
+    interaction = {undefined, #{}}  :: {undefined, #{}} | pact_interaction(),
+    mock_server_port = undefined    :: undefined | pact_mock_server_port()
 }).
 
-% Public API to start the server
+%% @doc Starts pact server
+-spec start_pact(consumer(), provider()) -> gen_server:start_ret().
 start_pact(Consumer, Producer) ->
     gen_server:start({global, {?MODULE, Consumer, Producer}}, ?MODULE,
         #pact_state{
@@ -29,33 +38,48 @@ start_pact(Consumer, Producer) ->
         []
     ).
 
+%% @doc Gets consumer and producer for a pact ref
+-spec get_consumer_producer(pid()) -> {consumer(), provider()}.
 get_consumer_producer(PactPid) ->
     gen_server:call(PactPid, get_consumer_producer).
 
+%% @doc Gets pact ref generated (when a new pact was created/re-created) by pact ffi
+-spec get_pact_ref(pid()) -> pact_ref().
 get_pact_ref(PactPid) ->
     gen_server:call(PactPid, get_pact_ref).
 
+%% @doc Sets pact_ref in pact_handler's state
+-spec set_pact_ref(pid(), pact_ref()) -> ok.
 set_pact_ref(PactPid, PactRef) ->
     gen_server:call(PactPid, {set_pact_ref, PactRef}).
 
-% Public API to create an interaction
+%% @doc Public API to create an interaction
+-spec create_interaction(pid(), pact_interaction_ref(), pact_interaction_details()) -> ok.
 create_interaction(PactPid, InteractionRef, Interaction) ->
     gen_server:call(PactPid, {create_interaction, InteractionRef, Interaction}).
 
-% Public API to retrieve all interactions stored in the state
+%% @doc Public API to retrieve all interactions stored in the state
+-spec get_interaction(pid()) -> pact_interaction().
 get_interaction(PactPid) ->
     gen_server:call(PactPid, get_interaction).
 
-% Public API to set the mock server port when the server is started
+%% @doc Public API to set the mock server port when the server is started
+-spec set_mock_server_port(pid(), pact_mock_server_port()) -> ok.
 set_mock_server_port(PactPid, Port) ->
     gen_server:call(PactPid, {set_mock_server_port, Port}).
 
-% Public API to set the mock server port when the server is started
+%% @doc Public API to set the mock server port when the server is started
+-spec get_mock_server_port(pid()) -> pact_mock_server_port().
 get_mock_server_port(PactPid) ->
     gen_server:call(PactPid, get_mock_server_port).
 
+%% @doc Stops the pact_handler gen_server for final cleanups
+-spec stop(pid()) -> ok.
+stop(PactPid) ->
+    gen_server:stop(PactPid).
 
-%% gen_server callbacks
+
+%% Gen_server callbacks
 
 init(#pact_state{consumer = Consumer, producer = Producer}) ->
     {ok, #pact_state{consumer = Consumer, producer = Producer}}.
@@ -98,6 +122,3 @@ terminate(_Reason, _State) ->
 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
-
-stop(PactPid) ->
-    gen_server:stop(PactPid).
