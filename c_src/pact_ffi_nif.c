@@ -446,7 +446,6 @@ static ERL_NIF_TERM erl_pactffi_with_query_parameter_v2(ErlNifEnv *env, int argc
     }
 }
 
-
 static ErlNifFunc nif_funcs[] =
     {
         {"erl_pactffi_version", 0, erl_pactffi_version},
