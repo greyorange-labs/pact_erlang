@@ -112,7 +112,7 @@ verify(MockServerPort) ->
     pactffi_nif:mock_server_matched(MockServerPort).
 
 %% @doc Returns all the interaction mismatches
--spec get_mismatches(integer()) -> [] | thaos:json_term().
+-spec get_mismatches(integer()) -> [] | thoas:json_term().
 get_mismatches(MockServerPort) ->
     case pactffi_nif:mock_server_mismatches(MockServerPort) of
         undefined ->
