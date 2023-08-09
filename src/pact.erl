@@ -33,7 +33,7 @@ interaction(PactPid, Interaction) ->
 
 
 %% @doc Verifies Writes pact file and also finally cleanups
--spec verify(pact_pid()) -> ok.
+-spec verify(pact_pid()) -> {ok, matched} | {error, not_matched}.
 verify(PactPid) ->
     pact_consumer_verify:verify_interaction(PactPid).
 

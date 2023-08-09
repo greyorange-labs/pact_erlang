@@ -15,19 +15,15 @@ insert_request_details(InteractionRef, RequestDetails) ->
     ReqMethod = maps:get(method, RequestDetails),
     ReqPath = maps:get(path, RequestDetails),
     pact_nif_interface:with_request(InteractionRef, ReqMethod, ReqPath),
-    ReqHeaders = maps:get(headers, RequestDetails, undefined),
+    ReqHeaders = maps:get(headers, RequestDetails, #{}),
     ContentType = get_content_type(ReqHeaders),
-    case ReqHeaders of
-        undefined -> ok;
-        _ ->
-            maps:fold(
-                fun(Key, Value, _Acc) ->
-                    pact_nif_interface:with_request_header(InteractionRef, Key, 0, Value)
-                end,
-                ok,
-                ReqHeaders
-            )
-    end,
+    maps:fold(
+        fun(Key, Value, _Acc) ->
+            pact_nif_interface:with_request_header(InteractionRef, Key, 0, Value)
+        end,
+        ok,
+        ReqHeaders
+    ),
     ReqBody = maps:get(body, RequestDetails, undefined),
     case ReqBody of
         undefined -> ok;

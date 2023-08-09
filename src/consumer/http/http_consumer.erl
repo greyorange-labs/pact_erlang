@@ -47,7 +47,7 @@ cleanup_interaction(PactPid) ->
 
 %% Internal functions
 
--spec init_interaction(pact_pid(), pact_interaction_ref()) -> {pact_ref(), pact_interaction_ref()}.
+-spec init_interaction(pact_pid(), pact_interaction_details()) -> {pact_ref(), pact_interaction_ref()}.
 init_interaction(PactPid, Interaction) ->
     {Consumer, Producer} = http_pact_handler:get_consumer_producer(PactPid),
     PactRef = pact_nif_interface:create_new_pact(Consumer, Producer),

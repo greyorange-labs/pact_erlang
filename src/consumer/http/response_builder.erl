@@ -20,18 +20,13 @@ insert_response_details(InteractionRef, ResponseDetails) ->
     end,
     ResHeaders = maps:get(headers, ResponseDetails, #{}),
     ContentType = get_content_type(ResHeaders),
-    case ResHeaders of
-        undefined -> 
-            ok;
-        _ ->
-            maps:fold(
-                fun(Key, Value, _Acc) ->
-                    pact_nif_interface:with_response_header(InteractionRef, Key, 0, Value)
-                end,
-                ok,
-                ResHeaders
-            )
-    end,
+    maps:fold(
+        fun(Key, Value, _Acc) ->
+            pact_nif_interface:with_response_header(InteractionRef, Key, 0, Value)
+        end,
+        ok,
+        ResHeaders
+    ),
     ResBody = maps:get(body, ResponseDetails, undefined),
     case ResBody of
         undefined -> ok;
