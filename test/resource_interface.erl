@@ -11,7 +11,7 @@ get_resource_with_child(Port, Barcode, QueryParams) ->
     Url = ResourceBaseUrl ++ "resources/getByBarcode" ++ get_query_string(QueryParams),
     BaseUrl = "http://127.0.0.1:" ++ integer_to_list(Port) ++ "/api-gateway",
     FinalUrl = BaseUrl ++ Url,
-    make_post_request(FinalUrl, jsx:encode(PayLoad), inf, #{name => ?FUNCTION_NAME}).
+    make_post_request(FinalUrl, thoas:encode(PayLoad), inf, #{name => ?FUNCTION_NAME}).
 
 make_post_request(Url, Payload, _Retries, _Map) ->
     Headers = [{<<"Content-Type">>, <<"application/json">>}],

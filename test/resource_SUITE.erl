@@ -103,19 +103,19 @@ get_resource_with_child_test_failure(Config) ->
 %% -------------------------------------------------------
 
 query_param_value() ->
-    jsx:encode([
+    thoas:encode([
         {<<"value">>, <<"false">>},
         {<<"pact:matcher:type">>, <<"regex">>},
         {<<"regex">>, <<"(true|false)">>}
     ]).
 
 request_body_success() ->
-    jsx:encode(
+    thoas:encode(
         [{<<"barcode">>, <<"tote_2">>}]
     ).
 
 response_body_success() ->
-    jsx:encode(
+    thoas:encode(
         [
             {<<"resource_id">>, [
                 {<<"value">>, 10},
@@ -129,12 +129,12 @@ response_body_success() ->
     ).
 
 request_body_failure() ->
-    jsx:encode(
+    thoas:encode(
         [{<<"barcode">>, [{<<"value">>, <<"tote_1">>}, {<<"pact:matcher:type">>, <<"type">>}]}]
     ).
 
 response_body_failure() ->
-    jsx:encode(
+    thoas:encode(
         [
             {<<"resource_id">>, <<"BAD_REQUEST">>},
             {<<"code">>, <<"ERR002">>},
