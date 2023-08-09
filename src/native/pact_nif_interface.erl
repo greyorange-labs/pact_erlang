@@ -128,9 +128,10 @@ pactffi_log_to_file(FilePath, LogLevel) ->
     pactffi_nif:log_to_file(FilePath, LogLevel).
 
 %% @doc Writes pact file with a given pact ref
--spec write_pact_file(integer(), binary()) -> integer().
+-spec write_pact_file(integer(), binary()) -> ok.
 write_pact_file(PactRef, PactDir) ->
-    pactffi_nif:pact_handle_write_file(PactRef, PactDir, 0).
+    pactffi_nif:pact_handle_write_file(PactRef, PactDir, 0),
+    ok.
 
 %% @doc Cleanup mock server
 -spec cleanup_mock_server(integer()) -> ok.

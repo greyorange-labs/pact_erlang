@@ -1,4 +1,4 @@
--module(pact_handler).
+-module(http_pact_handler).
 -behaviour(gen_server).
 
 -export([
