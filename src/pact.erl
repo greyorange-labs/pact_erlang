@@ -1,100 +1,49 @@
 -module(pact).
 
-%% Pact functions
+
 -export([
-    pactffi_version/0,
-    pactffi_logger_init/0,
-    pactffi_logger_attach_sink/2,
-    pactffi_logger_apply/0,
-    pactffi_log_message/3,
-    create_new_pact/2,
-    create_new_interaction/2,
-    with_request/3,
-    with_request_header/4,
-    with_request_body/3,
-    with_response_status/2,
-    with_response_header/4,
-    with_response_body/3,
-    create_mock_server_for_transport/4,
+    v4/2,
+    interaction/2,
     verify/1,
-    get_mismatches/1,
-    pactffi_log_to_file/2,
-    write_pact_file/2,
-    cleanup_mock_server/1,
-    cleanup_pact/1,
-    with_query_parameter/4,
-    given/2
+    write/2,
+    cleanup/1
 ]).
 
 
-pactffi_version() ->
-    pact_ffi_nif:erl_pactffi_version().
+-type consumer() :: binary().
+-type provider() :: binary().
+-type pact_pid() :: pid().
+-type pact_interaction_details() :: map().
+-type pact_mock_server_port() :: integer().
 
-pactffi_logger_init() ->
-    pact_ffi_nif:erl_pactffi_logger_init().
 
-pactffi_logger_attach_sink(LogPath, LogLevel) ->
-    pact_ffi_nif:erl_pactffi_logger_attach_sink(LogPath, LogLevel).
+%% @doc Starts a new pact server and returns its pid
+%% Returns old instance's pid in case cleanup was not done correctly
+-spec v4(consumer(), provider()) -> pact_pid().
+v4(Consumer, Provider) ->
+    pact_consumer:v4(Consumer, Provider).
 
-pactffi_logger_apply() ->
-    pact_ffi_nif:erl_pactffi_logger_apply().
 
-pactffi_log_message(Source, LogLevel, Message) ->
-    pact_ffi_nif:erl_pactffi_log_message(Source, LogLevel, Message).
+%% @doc Creates a mock server with the given interaction details
+%% Returns its port for running pact consumer tests
+-spec interaction(pact_pid(), pact_interaction_details()) ->
+    {ok, pact_mock_server_port()}.
+interaction(PactPid, Interaction) ->
+    pact_consumer:interaction(PactPid, Interaction).
 
-create_new_pact(Consumer, Producer) ->
-    pact_ffi_nif:erl_pactffi_new_pact(Consumer, Producer).
 
-create_new_interaction(PactRef, InteractionDescription) ->
-    pact_ffi_nif:erl_pactffi_new_interaction(PactRef, InteractionDescription).
+%% @doc Verifies Writes pact file and also finally cleanups
+-spec verify(pact_pid()) -> {ok, matched} | {error, not_matched}.
+verify(PactPid) ->
+    pact_consumer_verify:verify_interaction(PactPid).
 
-with_request(InteractionRef, ReqMethod, ReqPath) ->
-    pact_ffi_nif:erl_pactffi_with_request(InteractionRef, ReqMethod, ReqPath).
 
-with_request_header(InteractionRef, HeaderKey, Index, HeaderValue) ->
-    pact_ffi_nif:erl_pactffi_with_header_v2(InteractionRef, 0, HeaderKey, Index, HeaderValue).
+-spec write(pact_pid(), binary()) -> ok.
+write(PactPid, Path) ->
+    pact_consumer_verify:write_interaction(PactPid, Path).
 
-with_request_body(InteractionRef, ContentType, Json) ->
-    pact_ffi_nif:erl_pactffi_with_body(InteractionRef, 0, ContentType, Json).
 
-with_response_status(InteractionRef, ResponseCode) ->
-    pact_ffi_nif:erl_pactffi_response_status(InteractionRef, ResponseCode).
-
-with_response_header(InteractionRef, HeaderKey, Index, HeaderValue) ->
-    pact_ffi_nif:erl_pactffi_with_header_v2(InteractionRef, 1, HeaderKey, Index, HeaderValue).
-
-with_response_body(InteractionRef, ContentType, Json) ->
-    pact_ffi_nif:erl_pactffi_with_body(InteractionRef, 1, ContentType, Json).
-
-create_mock_server_for_transport(PactRef, Address, Port, TransportType) ->
-    pact_ffi_nif:erl_pactffi_create_mock_server_for_transport(PactRef, Address, Port, TransportType).
-
-verify(MockServerPort) ->
-    pact_ffi_nif:erl_pactffi_mock_server_matched(MockServerPort).
-
-get_mismatches(MockServerPort) ->
-    case pact_ffi_nif:erl_pactffi_mock_server_mismatches(MockServerPort) of
-        undefined ->
-            [];
-        Json ->
-            {ok, Mismatches} = thoas:decode(Json),
-            Mismatches
-    end.
-
-pactffi_log_to_file(FilePath, LogLevel) ->
-    pact_ffi_nif:erl_pactffi_log_to_file(FilePath, LogLevel).
-
-write_pact_file(PactRef, PactDir) ->
-    pact_ffi_nif:erl_pactffi_pact_handle_write_file(PactRef, PactDir, 0).
-
-cleanup_mock_server(MockServerPort) ->
-    pact_ffi_nif:erl_pactffi_cleanup_mock_server(MockServerPort).
-
-cleanup_pact(PactRef) ->
-    pact_ffi_nif:erl_pactffi_free_pact_handle(PactRef).
-
-with_query_parameter(InteractionRef, Name, Index, Value) ->
-    pact_ffi_nif:erl_pactffi_with_query_parameter_v2(InteractionRef, Name, Index, Value).
-
-given(InteractionRef, State) ->
-    pact_ffi_nif:erl_pactffi_given(InteractionRef, State).
+%% @doc Stops pact server
+-spec cleanup(pact_pid()) -> ok.
+cleanup(PactPid) ->
+    pact_consumer:cleanup(PactPid).
