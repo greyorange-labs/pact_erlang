@@ -10,7 +10,7 @@ clean:
 	@rm -rf doc
 
 test:
-	@$(REBAR) eunit
+	@$(REBAR) ct -v
 
 dialyzer:
 	@$(REBAR) as dialyzer dialyzer
