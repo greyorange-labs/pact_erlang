@@ -10,39 +10,45 @@ permissions:
 
 jobs:
   linux:
-    name: Test on OTP ${{ matrix.otp_version }} and ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: Test with OTP ${{ matrix.otp_version }} on Ubuntu
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        otp_version: [25, 26]
-        os: [ubuntu-latest]
-
-    container:
-      image: erlang:${{ matrix.otp_version }}
+        otp_version: ['25', '26']
 
     env:
       LATEST_OTP_RELEASE: 26
 
     steps:
     - uses: actions/checkout@v3
+    - name: Setup Erlang
+      uses: erlef/setup-beam@v1
+      with:
+        otp-version: ${{ matrix.otp_version }}
+        rebar3-version: '3.22.1'
     - name: Deps cache
       id: cache-deps
       uses: actions/cache@v3
       with:
         path: |
           priv
-          _build
-        key: ${{ runner.os }}-${{ matrix.os }}-${{ matrix.otp_version }}-deps-${{ hashFiles('**/rebar.lock', '**/Makefile') }}
+          _build/default
+        key: ${{ runner.os }}-${{ matrix.os }}-${{ matrix.otp_version }}-deps-${{ hashFiles('**/rebar.config', '**/rebar.lock', '**/Makefile') }}
         restore-keys: ${{ runner.os }}-${{ matrix.os }}-${{ matrix.otp_version }}-deps-
     - name: Compile
       run: make
     - name: Run tests
       run: make test
-    - name: Dialyzer
+    - name: Static Checks
       shell: bash
       run: |
-        [[ "${{ matrix.otp_version }}" != "${{ env.LATEST_OTP_RELEASE }}" ]] || (make dialyzer)
+        if [[ "${{ matrix.otp_version }}" == "${{ env.LATEST_OTP_RELEASE }}" ]]; then
+          wget -nv https://github.com/WhatsApp/eqwalizer/releases/download/v0.17.16/elp-linux.tar.gz
+          tar -xzf elp-linux.tar.gz
+          mv elp /usr/local/bin
+          make checks
+        fi
 
   macos:
     name: Test on MacOS
@@ -62,10 +68,8 @@ jobs:
       with:
         path: |
           priv
-          _build
-        key: ${{ runner.os }}-deps-${{ hashFiles('**/rebar.lock', '**/Makefile') }}
+          _build/default
+        key: ${{ runner.os }}-deps-${{ hashFiles('**/rebar.config', '**/rebar.lock', '**/Makefile') }}
         restore-keys: ${{ runner.os }}-deps-
     - name: Compile
       run: make
-    - name: Run tests
-      run: make test
