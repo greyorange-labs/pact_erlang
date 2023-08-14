@@ -41,8 +41,8 @@ interaction(PactPid, Interaction) ->
 cleanup_interaction(PactPid) ->
     PactRef = http_pact_handler:get_pact_ref(PactPid),
     MockServerPort = http_pact_handler:get_mock_server_port(PactPid),
-    ok = pact_nif_interface:cleanup_mock_server(MockServerPort),
-    pact_nif_interface:cleanup_pact(PactRef).
+    ok = pactffi_nif:cleanup_mock_server(MockServerPort),
+    pactffi_nif:free_pact_handle(PactRef).
 
 
 %% Internal functions
@@ -50,9 +50,9 @@ cleanup_interaction(PactPid) ->
 -spec init_interaction(pact_pid(), pact_interaction_details()) -> {pact_ref(), pact_interaction_ref()}.
 init_interaction(PactPid, Interaction) ->
     {Consumer, Producer} = http_pact_handler:get_consumer_producer(PactPid),
-    PactRef = pact_nif_interface:create_new_pact(Consumer, Producer),
+    PactRef = pactffi_nif:new_pact(Consumer, Producer),
     ok = http_pact_handler:set_pact_ref(PactPid, PactRef),
     GivenState = maps:get(upon_receiving, Interaction, <<"">>),
-    InteractionRef = pact_nif_interface:create_new_interaction(PactRef, GivenState),
+    InteractionRef = pactffi_nif:new_interaction(PactRef, GivenState),
     ok = http_pact_handler:create_interaction(PactPid, InteractionRef, Interaction),
     {PactRef, InteractionRef}.

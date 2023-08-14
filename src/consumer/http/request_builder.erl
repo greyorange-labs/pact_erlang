@@ -14,12 +14,13 @@
 insert_request_details(InteractionRef, RequestDetails) ->
     ReqMethod = maps:get(method, RequestDetails),
     ReqPath = maps:get(path, RequestDetails),
-    pact_nif_interface:with_request(InteractionRef, ReqMethod, ReqPath),
+    pactffi_nif:with_request(InteractionRef, ReqMethod, ReqPath),
     ReqHeaders = maps:get(headers, RequestDetails, #{}),
     ContentType = get_content_type(ReqHeaders),
     maps:fold(
         fun(Key, Value, _Acc) ->
-            pact_nif_interface:with_request_header(InteractionRef, Key, 0, Value)
+            %% FIXME: 4th parameter is Index.. need to increment
+            pactffi_nif:with_header_v2(InteractionRef, 0, Key, 0, Value)
         end,
         ok,
         ReqHeaders
@@ -28,7 +29,7 @@ insert_request_details(InteractionRef, RequestDetails) ->
     case ReqBody of
         undefined -> ok;
         _ ->
-            pact_nif_interface:with_request_body(InteractionRef, ContentType, ReqBody)
+            pactffi_nif:with_body(InteractionRef, 0, ContentType, ReqBody)
     end,
     ReqQueryParams = maps:get(query_params, RequestDetails, undefined),
     case ReqQueryParams of
@@ -36,7 +37,8 @@ insert_request_details(InteractionRef, RequestDetails) ->
         _ ->
             maps:fold(
                 fun(Key, Value, _Acc) ->
-                    pact_nif_interface:with_query_parameter(InteractionRef, Key, 0, Value)
+                    %% FIXME: 3rd parameter is Index.. need to increment
+                    pactffi_nif:with_query_parameter_v2(InteractionRef, Key, 0, Value)
                 end,
                 ok,
                 ReqQueryParams

@@ -16,13 +16,14 @@ insert_response_details(InteractionRef, ResponseDetails) ->
     case ResponseStatusCode of
         undefined -> ok;
         _ ->
-            pact_nif_interface:with_response_status(InteractionRef, ResponseStatusCode)
+            pactffi_nif:response_status(InteractionRef, ResponseStatusCode)
     end,
     ResHeaders = maps:get(headers, ResponseDetails, #{}),
     ContentType = get_content_type(ResHeaders),
     maps:fold(
         fun(Key, Value, _Acc) ->
-            pact_nif_interface:with_response_header(InteractionRef, Key, 0, Value)
+            %% FIXME: 4th parameter is Index.. need to increment
+            pactffi_nif:with_header_v2(InteractionRef, 1, Key, 0, Value)
         end,
         ok,
         ResHeaders
@@ -31,7 +32,7 @@ insert_response_details(InteractionRef, ResponseDetails) ->
     case ResBody of
         undefined -> ok;
         _ ->
-            pact_nif_interface:with_response_body(InteractionRef, ContentType, ResBody)
+            pactffi_nif:with_body(InteractionRef, 1, ContentType, ResBody)
     end,
     ok.
 
