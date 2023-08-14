@@ -1,5 +1,10 @@
 {"1.2.0",
-[{<<"thoas">>,{pkg,<<"thoas">>,<<"1.0.0">>},0}]}.
+[{<<"eqwalizer_support">>,
+  {git_subdir,"https://github.com/whatsapp/eqwalizer.git",
+              {ref,"1a787cb604f6083ebe8763e358ea362e4677e500"},
+              "eqwalizer_support"},
+  0},
+ {<<"thoas">>,{pkg,<<"thoas">>,<<"1.0.0">>},0}]}.
 [
 {pkg_hash,[
  {<<"thoas">>, <<"567C03902920827A18A89F05B79A37B5BF93553154B883E0131801600CF02CE0">>}]},

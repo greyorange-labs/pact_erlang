@@ -22,7 +22,7 @@ v4(Consumer, Provider) ->
     Result = http_pact_handler:start_pact(Consumer, Provider),
     case Result of
         {ok, PactPid} -> PactPid;
-        {error, {already_started, OldPactPid}} -> OldPactPid
+        {error, {already_started, OldPactPid}} when is_pid(OldPactPid) -> OldPactPid
     end.
 
 
