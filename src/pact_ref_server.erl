@@ -1,8 +1,8 @@
--module(http_pact_handler).
+-module(pact_ref_server).
 -behaviour(gen_server).
 
 -export([
-    start_pact/2,
+    start/2,
     create_interaction/3, get_interaction/1,
     set_mock_server_port/2, get_mock_server_port/1,
     stop/1,
@@ -28,8 +28,8 @@
 }).
 
 %% @doc Starts pact server
--spec start_pact(consumer(), provider()) -> gen_server:start_ret().
-start_pact(Consumer, Producer) ->
+-spec start(consumer(), provider()) -> gen_server:start_ret().
+start(Consumer, Producer) ->
     gen_server:start({global, {?MODULE, Consumer, Producer}}, ?MODULE,
         #pact_state{
             consumer = Consumer,
