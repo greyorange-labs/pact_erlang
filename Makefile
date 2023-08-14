@@ -10,7 +10,8 @@ clean:
 	@rm -rf doc
 
 test:
-	@$(REBAR) ct -v
+	@$(REBAR) ct -v -c
+	@$(REBAR) cover -v
 
 dialyzer:
 	@$(REBAR) as dialyzer dialyzer
