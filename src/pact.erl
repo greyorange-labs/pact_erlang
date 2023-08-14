@@ -35,12 +35,12 @@ interaction(PactPid, Interaction) ->
 %% @doc Verifies Writes pact file and also finally cleanups
 -spec verify(pact_pid()) -> {ok, matched} | {error, not_matched}.
 verify(PactPid) ->
-    pact_consumer_verify:verify_interaction(PactPid).
+    pact_consumer:verify_interaction(PactPid).
 
 
 -spec write(pact_pid(), binary()) -> ok.
 write(PactPid, Path) ->
-    pact_consumer_verify:write_interaction(PactPid, Path).
+    pact_consumer:write_interaction(PactPid, Path).
 
 
 %% @doc Stops pact server

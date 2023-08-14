@@ -1,6 +1,11 @@
 -module(pactffi_nif).
 
-%% Pact functions
+%% Non-NIF functions
+-export([
+    get_mismatches/1
+]).
+
+%% Pact NIF functions
 -export([
     version/0,
     logger_init/0,
@@ -48,6 +53,18 @@
     given/2
 ]).
 -on_load(init/0).
+
+%% Non-NIF functions (mostly just wrappers around NIF functions)
+%% @doc Returns all the interaction mismatches
+-spec get_mismatches(integer()) -> [] | thoas:json_term().
+get_mismatches(MockServerPort) ->
+    case pactffi_nif:mock_server_mismatches(MockServerPort) of
+        undefined ->
+            [];
+        Json ->
+            {ok, Mismatches} = thoas:decode(Json),
+            Mismatches
+    end.
 
 % Load the NIF library
 init() ->

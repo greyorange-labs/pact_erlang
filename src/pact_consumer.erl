@@ -4,6 +4,8 @@
 -export([
     v4/2,
     interaction/2,
+    verify_interaction/1,
+    write_interaction/2,
     cleanup/1
 ]).
 
@@ -24,6 +26,19 @@ v4(Consumer, Provider) ->
     {ok, pact_mock_server_port()}.
 interaction(PactPid, Interaction) ->
     http_consumer:interaction(PactPid, Interaction).
+
+
+-spec verify_interaction(pact_pid()) -> {ok, matched} | {error, not_matched}.
+verify_interaction(PactPid) ->
+    MockServerPort = http_pact_handler:get_mock_server_port(PactPid),
+    pactffi_nif:mock_server_matched(MockServerPort).
+
+
+-spec write_interaction(pact_pid(), binary()) -> ok.
+write_interaction(PactPid, Path) ->
+    PactRef = http_pact_handler:get_pact_ref(PactPid),
+    pactffi_nif:pact_handle_write_file(PactRef, Path, 0),
+    http_consumer:cleanup_interaction(PactPid).
 
 
 -spec cleanup(pact_pid()) -> ok.
