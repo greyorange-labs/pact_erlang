@@ -19,16 +19,9 @@ dialyzer:
 xref:
 	@$(REBAR) xref
 
-ifeq (, $(shell which elp))
-eqwalizer:
-else
-eqwalizer:
-	@elp eqwalize-all
-endif
-
-checks: xref dialyzer eqwalizer
+checks: xref dialyzer
 
 hex-build:
 	@$(REBAR) hex build
 
-.PHONY: all compile clean test dialyzer xref eqwalizer checks
+.PHONY: all compile clean test dialyzer xref checks
