@@ -16,7 +16,6 @@ start() ->
 start(Port) ->
     {ok, _} = application:ensure_all_started(inets),
     create_table(),
-    insert_animal(<<"Mary">>, <<"alligator">>),
     {ok, Pid} = inets:start(httpd, [{port, Port}, {server_name, "animal_service"}, {server_root, "./"}, {document_root, "./"}, {modules, [animal_service]}]),
     Info = httpd:info(Pid),
     {port, ListenPort} = lists:keyfind(port, 1, Info),
@@ -32,6 +31,9 @@ create_table() ->
 insert_animal(Name, Type) when Name =/= undefined andalso Type =/= undefined ->
     ets:insert(?TABLE_NAME, {Name, Type});
 insert_animal(_Name, _Type) -> {false, "Either name or type is missing"}.
+
+reset_data() ->
+    ets:delete_all_objects(?TABLE_NAME).
 
 find_animal_by_name(Name) ->
     case ets:match_object(?TABLE_NAME, {Name, '_'}) of
@@ -95,7 +97,16 @@ process_data(#mod{request_uri = "/animals", method = "POST", entity_body = Body}
         {error, Reason} ->
             io:format("JSON Decode Error: ~p~n", [Reason]),
             make_json_response(400, #{error => <<"Invalid JSON">>})
-    end.
+    end;
+process_data(#mod{request_uri = "/pactStateChange", method = "POST", entity_body = Body}) ->
+    {ok, StateRequest} = thoas:decode(Body),
+    RequiredState = maps:get(<<"state">>, StateRequest, <<"">>),
+    case RequiredState of
+        <<"">> -> reset_data();
+        <<"an alligator with the name Mary exists">> ->
+            insert_animal(<<"Mary">>, <<"alligator">>)
+    end,
+    make_json_response(200, #{ok => true}).
 
 make_json_response(Code, Body) ->
     BodyJson = erlang:binary_to_list(thoas:encode(Body)),
