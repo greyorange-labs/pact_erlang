@@ -1,12 +1,10 @@
 -module(pact_consumer_http).
 
-
 -export([
     v4/2,
     interaction/2,
     cleanup_interaction/1
 ]).
-
 
 -type pact_ref() :: integer().
 -type pact_interaction_ref() :: integer().
@@ -17,7 +15,6 @@
 -type pact_mock_server_port() :: integer().
 -type request_details() :: map().
 -type response_details() :: map().
-
 
 -spec v4(consumer(), provider()) -> pact_pid().
 v4(Consumer, Provider) ->
@@ -30,10 +27,9 @@ interaction(PactPid, Interaction) ->
     {PactRef, InteractionRef} = init_interaction(PactPid, Interaction),
     RequestDetails = maps:get(with_request, Interaction, #{}),
     ok = insert_request_details(InteractionRef, RequestDetails),
-    ResponseDetails = maps:get(will_respond_with, Interaction ,#{}),
+    ResponseDetails = maps:get(will_respond_with, Interaction, #{}),
     ok = insert_response_details(InteractionRef, ResponseDetails),
     start_mock_server(PactPid, PactRef, <<"127.0.0.1">>, 0, <<"http">>).
-
 
 -spec cleanup_interaction(pact_pid()) -> ok.
 cleanup_interaction(PactPid) ->
@@ -42,10 +38,10 @@ cleanup_interaction(PactPid) ->
     ok = pactffi_nif:cleanup_mock_server(MockServerPort),
     pactffi_nif:free_pact_handle(PactRef).
 
-
 %% Internal functions
 
--spec init_interaction(pact_pid(), pact_interaction_details()) -> {pact_ref(), pact_interaction_ref()}.
+-spec init_interaction(pact_pid(), pact_interaction_details()) ->
+    {pact_ref(), pact_interaction_ref()}.
 init_interaction(PactPid, Interaction) ->
     {Consumer, Producer} = pact_ref_server:get_consumer_producer(PactPid),
     PactRef = pactffi_nif:new_pact(Consumer, Producer),
@@ -59,8 +55,8 @@ init_interaction(PactPid, Interaction) ->
     ok = pact_ref_server:create_interaction(PactPid, InteractionRef, Interaction),
     {PactRef, InteractionRef}.
 
--spec start_mock_server(pact_pid(), pact_ref(), binary(), integer(), binary())
--> {ok, pact_mock_server_port()}.
+-spec start_mock_server(pact_pid(), pact_ref(), binary(), integer(), binary()) ->
+    {ok, pact_mock_server_port()}.
 start_mock_server(PactPid, PactRef, Host, Port, InteractionPart) ->
     MockServerPort = pactffi_nif:create_mock_server_for_transport(
         PactRef, Host, Port, InteractionPart
@@ -88,12 +84,12 @@ insert_request_details(InteractionRef, RequestDetails) ->
     ReqBody = maps:get(body, RequestDetails, undefined),
     case ReqBody of
         undefined -> ok;
-        _ ->
-            pactffi_nif:with_body(InteractionRef, 0, ContentType, ReqBody)
+        _ -> pactffi_nif:with_body(InteractionRef, 0, ContentType, ReqBody)
     end,
     ReqQueryParams = maps:get(query_params, RequestDetails, undefined),
     case ReqQueryParams of
-        undefined -> ok;
+        undefined ->
+            ok;
         _ ->
             maps:fold(
                 fun(Key, Value, _Acc) ->
@@ -111,8 +107,7 @@ insert_response_details(InteractionRef, ResponseDetails) ->
     ResponseStatusCode = maps:get(status, ResponseDetails, undefined),
     case ResponseStatusCode of
         undefined -> ok;
-        _ ->
-            pactffi_nif:response_status(InteractionRef, ResponseStatusCode)
+        _ -> pactffi_nif:response_status(InteractionRef, ResponseStatusCode)
     end,
     ResHeaders = maps:get(headers, ResponseDetails, #{}),
     ContentType = get_content_type(ResHeaders),
@@ -127,8 +122,7 @@ insert_response_details(InteractionRef, ResponseDetails) ->
     ResBody = maps:get(body, ResponseDetails, undefined),
     case ResBody of
         undefined -> ok;
-        _ ->
-            pactffi_nif:with_body(InteractionRef, 1, ContentType, ResBody)
+        _ -> pactffi_nif:with_body(InteractionRef, 1, ContentType, ResBody)
     end,
     ok.
 

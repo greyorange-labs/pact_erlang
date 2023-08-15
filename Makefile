@@ -19,9 +19,16 @@ dialyzer:
 xref:
 	@$(REBAR) xref
 
-checks: xref dialyzer
+check-format:
+	@echo "Checking format..."
+	@$(REBAR) format -v
+
+format:
+	@$(REBAR) format
+
+checks: xref dialyzer check-format
 
 hex-build:
 	@$(REBAR) hex build
 
-.PHONY: all compile clean test dialyzer xref checks
+.PHONY: all compile clean test dialyzer xref checks format check-format

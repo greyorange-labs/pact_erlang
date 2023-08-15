@@ -4,9 +4,11 @@
 -export([
     start/2,
     create_interaction/3,
-    set_mock_server_port/2, get_mock_server_port/1,
+    set_mock_server_port/2,
+    get_mock_server_port/1,
     stop/1,
-    get_pact_ref/1, set_pact_ref/2,
+    get_pact_ref/1,
+    set_pact_ref/2,
     get_consumer_producer/1
 ]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
@@ -15,10 +17,11 @@
 -type pact_interaction_ref() :: integer().
 -type consumer() :: binary().
 -type provider() :: binary().
--type pact_interaction_details() :: map(). 
+-type pact_interaction_details() :: map().
 -type pact_interaction() :: {pact_interaction_ref(), pact_interaction_details()}.
 -type pact_mock_server_port() :: integer().
 
+%% erlfmt-ignore
 -record(pact_state, {
     consumer                        :: consumer(),
     producer                        :: provider(),
@@ -30,7 +33,9 @@
 %% @doc Starts pact server
 -spec start(consumer(), provider()) -> gen_server:start_ret().
 start(Consumer, Producer) ->
-    gen_server:start({global, {?MODULE, Consumer, Producer}}, ?MODULE,
+    gen_server:start(
+        {global, {?MODULE, Consumer, Producer}},
+        ?MODULE,
         #pact_state{
             consumer = Consumer,
             producer = Producer
@@ -73,7 +78,6 @@ get_mock_server_port(PactPid) ->
 stop(PactPid) ->
     gen_server:stop(PactPid).
 
-
 %% Gen_server callbacks
 
 init(#pact_state{consumer = Consumer, producer = Producer}) ->
@@ -82,21 +86,16 @@ init(#pact_state{consumer = Consumer, producer = Producer}) ->
 handle_call({create_interaction, InteractionRef, Interaction}, _From, State) ->
     NewState = State#pact_state{interaction = {InteractionRef, Interaction}},
     {reply, ok, NewState};
-
 handle_call({set_mock_server_port, Port}, _From, State) ->
-    NewState = State#pact_state{mock_server_port=Port},
+    NewState = State#pact_state{mock_server_port = Port},
     {reply, ok, NewState};
-
 handle_call(get_mock_server_port, _From, State) ->
     {reply, State#pact_state.mock_server_port, State};
-
 handle_call(get_pact_ref, _From, State) ->
     {reply, State#pact_state.pact_ref, State};
-
 handle_call({set_pact_ref, PactRef}, _From, State) ->
-    NewState = State#pact_state{pact_ref=PactRef},
+    NewState = State#pact_state{pact_ref = PactRef},
     {reply, ok, NewState};
-
 handle_call(get_consumer_producer, _From, State) ->
     {reply, {State#pact_state.consumer, State#pact_state.producer}, State}.
 

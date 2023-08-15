@@ -68,13 +68,13 @@ get_mismatches(MockServerPort) ->
 
 % Load the NIF library
 init() ->
-  % Adjust the path to the built NIF wrapper library
-  Path = code:priv_dir(pact_erlang) ++ "/libpact_ffi",
-  ok = erlang:load_nif(Path, 0).
+    % Adjust the path to the built NIF wrapper library
+    Path = code:priv_dir(pact_erlang) ++ "/libpact_ffi",
+    ok = erlang:load_nif(Path, 0).
 
 % Define the Erlang functions that calls the NIF functions
 version() ->
-  erlang:nif_error("NIF library not loaded").
+    erlang:nif_error("NIF library not loaded").
 
 logger_init() ->
     erlang:nif_error("NIF library not loaded").
