@@ -9,7 +9,7 @@ all() -> [{group, consumer}, {group, producer}].
 
 groups() ->
     [
-        {consumer, [get_animal_success, get_animal_failure]},
+        {consumer, [get_animal_success, get_animal_failure, create_animal, search_animals]},
         {producer, [verify_producer]}
     ].
 
@@ -58,10 +58,10 @@ get_animal_failure(Config) ->
     PactRef = ?config(pact_ref, Config),
     {ok, Port} = pact:interaction(PactRef,
     #{
-        upon_receiving => <<"a request to GET a non-existing animal: Max">>,
+        upon_receiving => <<"a request to GET a non-existing animal: Miles">>,
         with_request => #{
             method => <<"GET">>,
-            path => <<"/animals/Max">>
+            path => <<"/animals/Miles">>
         },
         will_respond_with => #{
             status => 404,
@@ -71,17 +71,63 @@ get_animal_failure(Config) ->
             body => thoas:encode(#{error => not_found})
         }
     }),
-    ?assertMatch({error, not_found}, animal_service_interface:get_animal(Port, "Max")),
+    ?assertMatch({error, not_found}, animal_service_interface:get_animal(Port, "Miles")),
+    {ok, matched} = pact:verify(PactRef),
+    pact:write(PactRef, <<"./pacts">>).
+
+create_animal(Config) ->
+    PactRef = ?config(pact_ref, Config),
+    AnimalObject = #{<<"name">> => <<"Max">>, <<"type">> => <<"dog">>},
+    {ok, Port} = pact:interaction(PactRef,
+    #{
+        upon_receiving => <<"a request to create an animal: Max">>,
+        with_request => #{
+            method => <<"POST">>,
+            path => <<"/animals">>,
+            headers => #{
+                <<"Content-Type">> => <<"application/json">>
+            },
+            body => thoas:encode(AnimalObject)
+        },
+        will_respond_with => #{
+            status => 201
+        }
+    }),
+    ?assertMatch(ok, animal_service_interface:create_animal(Port, AnimalObject)),
+    {ok, matched} = pact:verify(PactRef),
+    pact:write(PactRef, <<"./pacts">>).
+
+search_animals(Config) ->
+    PactRef = ?config(pact_ref, Config),
+    Result = #{<<"animals">> => [#{<<"name">> => <<"Mary">>, <<"type">> => <<"alligator">>}]},
+    Query = #{<<"type">> => <<"alligator">>},
+    {ok, Port} = pact:interaction(PactRef,
+    #{
+        upon_receiving => <<"a request to search animals by type">>,
+        with_request => #{
+            method => <<"GET">>,
+            path => <<"/animals">>,
+            query_params => Query
+        },
+        will_respond_with => #{
+            headers => #{
+                <<"Content-Type">> => <<"application/json">>
+            },
+            body => thoas:encode(Result)
+        }
+    }),
+    ?assertMatch({ok, Result}, animal_service_interface:search_animals(Port, Query)),
     {ok, matched} = pact:verify(PactRef),
     pact:write(PactRef, <<"./pacts">>).
 
 verify_producer(_Config) ->
     {ok, Port} = animal_service:start(0),
     Cmd = "docker run --network host --rm -v ./pacts:/pacts "
-            "pactfoundation/pact-ref-verifier --full-log "
+            "-e PACT_DO_NOT_TRACK=true "
+            "pactfoundation/pact-ref-verifier --full-log -l error "
             "-d /pacts -n animal_service -p " ++ integer_to_list(Port),
     {RetCode, Output} = run_cmd(Cmd),
-    ct:print("===> Verification Output: ~n~s", [Output]),
+    ct:print("===> Provider Verification Output: ~n~s", [Output]),
     ?assertEqual(0, RetCode),
     animal_service:stop().
 

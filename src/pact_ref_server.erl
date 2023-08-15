@@ -3,13 +3,13 @@
 
 -export([
     start/2,
-    create_interaction/3, get_interaction/1,
+    create_interaction/3,
     set_mock_server_port/2, get_mock_server_port/1,
     stop/1,
     get_pact_ref/1, set_pact_ref/2,
     get_consumer_producer/1
 ]).
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
 
 -type pact_ref() :: integer().
 -type pact_interaction_ref() :: integer().
@@ -58,11 +58,6 @@ set_pact_ref(PactPid, PactRef) ->
 create_interaction(PactPid, InteractionRef, Interaction) ->
     gen_server:call(PactPid, {create_interaction, InteractionRef, Interaction}).
 
-%% @doc Public API to retrieve all interactions stored in the state
--spec get_interaction(pid()) -> pact_interaction().
-get_interaction(PactPid) ->
-    gen_server:call(PactPid, get_interaction).
-
 %% @doc Public API to set the mock server port when the server is started
 -spec set_mock_server_port(pid(), pact_mock_server_port()) -> ok.
 set_mock_server_port(PactPid, Port) ->
@@ -88,9 +83,6 @@ handle_call({create_interaction, InteractionRef, Interaction}, _From, State) ->
     NewState = State#pact_state{interaction = {InteractionRef, Interaction}},
     {reply, ok, NewState};
 
-handle_call(get_interaction, _From, State) ->
-    {reply, State#pact_state.interaction, State};
-
 handle_call({set_mock_server_port, Port}, _From, State) ->
     NewState = State#pact_state{mock_server_port=Port},
     {reply, ok, NewState};
@@ -106,10 +98,7 @@ handle_call({set_pact_ref, PactRef}, _From, State) ->
     {reply, ok, NewState};
 
 handle_call(get_consumer_producer, _From, State) ->
-    {reply, {State#pact_state.consumer, State#pact_state.producer}, State};
-
-handle_call(_Request, _From, State) ->
-    {reply, unknown_request, State}.
+    {reply, {State#pact_state.consumer, State#pact_state.producer}, State}.
 
 handle_cast(_Msg, State) ->
     {noreply, State}.
@@ -119,6 +108,3 @@ handle_info(_Info, State) ->
 
 terminate(_Reason, _State) ->
     ok.
-
-code_change(_OldVsn, State, _Extra) ->
-    {ok, State}.

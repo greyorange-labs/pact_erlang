@@ -21,12 +21,8 @@
 
 -spec v4(consumer(), provider()) -> pact_pid().
 v4(Consumer, Provider) ->
-    Result = pact_ref_server:start(Consumer, Provider),
-    case Result of
-        {ok, PactPid} -> PactPid;
-        {error, {already_started, OldPactPid}} when is_pid(OldPactPid) -> OldPactPid
-    end.
-
+    {ok, PactPid} = pact_ref_server:start(Consumer, Provider),
+    PactPid.
 
 -spec interaction(pact_pid(), pact_interaction_details()) ->
     {ok, pact_mock_server_port()}.
