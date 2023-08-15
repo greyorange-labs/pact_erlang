@@ -14,7 +14,12 @@
         "rebar.config",
         "rebar.lock",
         "README.md",
+        "CHANGELOG.md",
         "LICENSE",
         "Makefile"
+    ]},
+    {exclude_paths, [
+        "c_src/.cache",
+        "c_src/compile_commands.json"
     ]}
 ]}.

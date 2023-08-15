@@ -1,11 +1,20 @@
-pact-erlang
+pact_erlang
 =====
+
+![Build Status](https://github.com/greyorange-labs/pact_erlang/actions/workflows/erlang.yml/badge.svg?event=push)
+[![Code Coverage](https://codecov.io/gh/greyorange-labs/pact_erlang/branch/develop/graph/badge.svg?token=9F8XCB1TBR)](https://codecov.io/gh/greyorange-labs/pact_erlang)
+[![Hex Version](https://img.shields.io/hexpm/v/pact_erlang.svg)](https://hex.pm/packages/pact_erlang)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/pact_erlang/)
+[![Total Download](https://img.shields.io/hexpm/dt/pact_erlang.svg)](https://hex.pm/packages/pact_erlang)
+[![License](https://img.shields.io/hexpm/l/pact_erlang.svg)](https://github.com/greyorange-labs/pact_erlang/blob/develop/LICENSE)
+
 
 An erlang library for contract testing using pact ffi and generating consumer pacts.
 
 This library should be considered alpha quality. It is not yet feature complete and the API is subject to change.
 
-Docs: https://hexdocs.pm/pact_erlang/readme.html
+Docs: https://hexdocs.pm/pact_erlang \
+Changelog: https://hexdocs.pm/pact_erlang/changelog.html
 
 Build
 -----
@@ -22,6 +31,7 @@ Add pact-erlang as a dependency in your application
 Usage
 -----
 
+Check the test folder for an example end-to-end scenario including consumer and producer checks.
 
 ```erlang
 %% Setup
@@ -31,7 +41,8 @@ PactRef = pact:v4(<<"consumer">>, <<"producer">>).
 %% Define the interaction, returns running mock server port
 {ok, Port} = pact:interaction(PactRef,
     #{
-        upon_receiving => <<"/users api desc">>,
+        given => <<"a user ranjan exists">>
+        upon_receiving => <<"get all users">>,
         with_request => #{
             method => <<"GET">>,
             path => <<"/users">>
@@ -41,7 +52,7 @@ PactRef = pact:v4(<<"consumer">>, <<"producer">>).
             headers => #{
                 <<"Content-Type">> => <<"application/json">>
             },
-            body => jsx:encode(#{user_id => 1, user_name => <<"ranjan">>, age => 26})
+            body => jsx:encode(#{users => [#{user_id => 1, user_name => <<"ranjan">>, age => 26}]})
         }
     }).
 
@@ -64,5 +75,5 @@ pact:cleanup(PactRef)
 Matching request path and request/response headers, and body values
 -----
 
-For now the matchers module is not implemented, but we can very much match values.
-Refer source - https://github.com/pact-foundation/pact-reference/blob/master/rust/pact_ffi/IntegrationJson.md
+Easy-to-use matchers module is not implemented yet, but matchers can be used by manually specifying a matcher string.
+Check the possible values here: https://github.com/pact-foundation/pact-reference/blob/master/rust/pact_ffi/IntegrationJson.md
