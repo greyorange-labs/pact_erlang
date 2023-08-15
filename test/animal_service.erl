@@ -16,7 +16,7 @@ start() ->
 start(Port) ->
     {ok, _} = application:ensure_all_started(inets),
     create_table(),
-    insert_animal("Mary", "alligator"),
+    insert_animal(<<"Mary">>, <<"alligator">>),
     {ok, Pid} = inets:start(httpd, [{port, Port}, {server_name, "animal_service"}, {server_root, "./"}, {document_root, "./"}, {modules, [animal_service]}]),
     Info = httpd:info(Pid),
     {port, ListenPort} = lists:keyfind(port, 1, Info),
@@ -29,16 +29,21 @@ stop() ->
 create_table() ->
     ets:new(?TABLE_NAME, [set, public, named_table]).
 
-insert_animal(Name, Type) ->
-    ets:insert(?TABLE_NAME, {Name, Type}).
+insert_animal(Name, Type) when Name =/= undefined andalso Type =/= undefined ->
+    ets:insert(?TABLE_NAME, {Name, Type});
+insert_animal(_Name, _Type) -> {false, "Either name or type is missing"}.
 
 find_animal_by_name(Name) ->
     case ets:match_object(?TABLE_NAME, {Name, '_'}) of
         [] ->
             {error, not_found};
         [{Name, Type}] ->
-            {ok, #{name => erlang:list_to_binary(Name), type => erlang:list_to_binary(Type)}}
+            {ok, #{name => Name, type => Type}}
     end.
+
+find_animals_by_type(Type) ->
+    AnimalList = ets:match_object(?TABLE_NAME, {'_', Type}),
+    lists:map(fun({N, T}) -> #{name => N, type => T} end, AnimalList).
 
 do(ModData) ->
     case catch process_data(ModData) of
@@ -49,25 +54,53 @@ do(ModData) ->
             Response
     end.
 
-process_data(#mod{request_uri = Path}) ->
+process_data(#mod{request_uri = ReqUri, method = "GET"}) ->
+    UriMap = uri_string:parse(ReqUri),
+    Path = maps:get(path, UriMap),
     SplitPath = string:tokens(Path, "/"),
-    ResponseData = case SplitPath of
+    case SplitPath of
         ["animals", Name] ->
-            case find_animal_by_name(Name) of
+            NameBinary = erlang:list_to_binary(Name),
+            case find_animal_by_name(NameBinary) of
                 {ok, Animal} ->
                     make_json_response(200, Animal);
                 {error, not_found} ->
                     make_404_response()
             end;
+        ["animals"] ->
+            QueryStr = maps:get(query, UriMap, ""),
+            Query = maps:from_list(uri_string:dissect_query(QueryStr)),
+            case maps:get("type", Query, undefined) of
+                undefined ->
+                    make_json_response(400, #{error => <<"Missing query parameter: type">>});
+                Type ->
+                    TypeBinary = erlang:list_to_binary(Type),
+                    AnimalObjectList = find_animals_by_type(TypeBinary),
+                    make_json_response(200, #{animals => AnimalObjectList})
+            end;
         _ ->
             make_404_response()
-    end,
-    {proceed, ResponseData}.
+    end;
+process_data(#mod{request_uri = "/animals", method = "POST", entity_body = Body}) ->
+    case thoas:decode(Body) of
+        {ok, Animal} ->
+            Name = maps:get(<<"name">>, Animal, undefined),
+            Type = maps:get(<<"type">>, Animal, undefined),
+            case insert_animal(Name, Type) of
+                true ->
+                    make_json_response(201, #{ok => true});
+                {false, Reason} ->
+                    make_json_response(400, #{error => erlang:list_to_binary(Reason)})
+            end;
+        {error, Reason} ->
+            io:format("JSON Decode Error: ~p~n", [Reason]),
+            make_json_response(400, #{error => <<"Invalid JSON">>})
+    end.
 
 make_json_response(Code, Body) ->
     BodyJson = erlang:binary_to_list(thoas:encode(Body)),
     Length = io_lib:format("~w", [io_lib:chars_length(BodyJson)]),
-    [{response, {response, [{code, Code}, {content_length, Length}, {content_type, "application/json"}], BodyJson}}].
+    {proceed, [{response, {response, [{code, Code}, {content_length, Length}, {content_type, "application/json"}], BodyJson}}]}.
 
 make_404_response() ->
     make_json_response(404, #{error => not_found}).
