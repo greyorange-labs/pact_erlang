@@ -50,8 +50,12 @@ init_interaction(PactPid, Interaction) ->
     {Consumer, Producer} = pact_ref_server:get_consumer_producer(PactPid),
     PactRef = pactffi_nif:new_pact(Consumer, Producer),
     ok = pact_ref_server:set_pact_ref(PactPid, PactRef),
-    GivenState = maps:get(upon_receiving, Interaction, <<"">>),
-    InteractionRef = pactffi_nif:new_interaction(PactRef, GivenState),
+    InteractionDesc = maps:get(upon_receiving, Interaction, <<"">>),
+    InteractionRef = pactffi_nif:new_interaction(PactRef, InteractionDesc),
+    case maps:get(given, Interaction, undefined) of
+        undefined -> ok;
+        GivenState -> pactffi_nif:given(InteractionRef, GivenState)
+    end,
     ok = pact_ref_server:create_interaction(PactPid, InteractionRef, Interaction),
     {PactRef, InteractionRef}.
 

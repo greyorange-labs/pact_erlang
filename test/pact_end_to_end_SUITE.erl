@@ -37,7 +37,8 @@ get_animal_success(Config) ->
     AnimalObject = #{<<"name">> => <<"Mary">>, <<"type">> => <<"alligator">>},
     {ok, Port} = pact:interaction(PactRef,
     #{
-        upon_receiving => <<"a request to GET an existing animal: Mary">>,
+        given => <<"an alligator with the name Mary exists">>,
+        upon_receiving => <<"a request to GET an animal: Mary">>,
         with_request => #{
             method => <<"GET">>,
             path => <<"/animals/Mary">>
@@ -103,7 +104,8 @@ search_animals(Config) ->
     Query = #{<<"type">> => <<"alligator">>},
     {ok, Port} = pact:interaction(PactRef,
     #{
-        upon_receiving => <<"a request to search animals by type">>,
+        given => <<"an alligator with the name Mary exists">>,
+        upon_receiving => <<"a request to find all alligators">>,
         with_request => #{
             method => <<"GET">>,
             path => <<"/animals">>,
@@ -124,7 +126,8 @@ verify_producer(_Config) ->
     {ok, Port} = animal_service:start(0),
     Cmd = "docker run --network host --rm -v ./pacts:/pacts "
             "-e PACT_DO_NOT_TRACK=true "
-            "pactfoundation/pact-ref-verifier --full-log -l error "
+            "pactfoundation/pact-ref-verifier --full-log -l warn "
+            "-s http://localhost:" ++ integer_to_list(Port) ++ "/pactStateChange "
             "-d /pacts -n animal_service -p " ++ integer_to_list(Port),
     {RetCode, Output} = run_cmd(Cmd),
     ct:print("===> Provider Verification Output: ~n~s", [Output]),
