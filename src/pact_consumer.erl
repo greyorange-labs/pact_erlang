@@ -4,6 +4,7 @@
     v4/2,
     interaction/2,
     verify_interaction/1,
+    write_interaction/1,
     write_interaction/2,
     cleanup/1
 ]).
@@ -28,6 +29,11 @@ verify_interaction(PactPid) ->
     MockServerPort = pact_ref_server:get_mock_server_port(PactPid),
     pactffi_nif:mock_server_matched(MockServerPort).
 
+-spec write_interaction(pact_pid()) -> ok.
+write_interaction(PactPid) ->
+    DefaultPath = get_pacts_dir(),
+    pact_consumer:write_interaction(PactPid, DefaultPath).
+
 -spec write_interaction(pact_pid(), binary()) -> ok.
 write_interaction(PactPid, Path) ->
     PactRef = pact_ref_server:get_pact_ref(PactPid),
@@ -38,3 +44,13 @@ write_interaction(PactPid, Path) ->
 cleanup(PactPid) ->
     pact_consumer_http:cleanup_interaction(PactPid),
     pact_ref_server:stop(PactPid).
+
+
+%% Internal functions
+
+-spec get_pacts_dir() -> binary().
+get_pacts_dir() ->
+    {ok, Cwd} = file:get_cwd(),
+    PactDir = Cwd ++ "/pacts",
+    ok = filelib:ensure_dir(PactDir),
+    list_to_binary(PactDir).
