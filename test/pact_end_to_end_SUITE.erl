@@ -120,7 +120,7 @@ search_animals(Config) ->
     }),
     ?assertMatch({ok, Result}, animal_service_interface:search_animals(Port, Query)),
     {ok, matched} = pact:verify(PactRef),
-    pact:write(PactRef, <<"./pacts">>).
+    pact:write(PactRef).
 
 verify_producer(_Config) ->
     {ok, Port} = animal_service:start(0),
