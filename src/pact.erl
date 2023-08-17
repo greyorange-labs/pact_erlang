@@ -36,7 +36,7 @@ verify(PactPid) ->
 %% @doc writes pact to the default directory path `./pacts'
 -spec write(pact_pid()) -> ok.
 write(PactPid) ->
-    pact_consumer:write_interaction(PactPid).
+    pact_consumer:write_interaction(PactPid, <<"./pacts">>).
 
 %% @doc writes pact to the given directory path
 -spec write(pact_pid(), binary()) -> ok.
