@@ -75,8 +75,18 @@ pact:write(PactRef, "/path/to/pacts").
 %% This won't cleanup the pact files, only the pact ref you created in the test setup
 pact:cleanup(PactRef).
 ```
+
 Matching request path and request/response headers, and body values
 -----
 
 Easy-to-use matchers module is not implemented yet, but matchers can be used by manually specifying a matcher string.
 Check the possible values here: https://github.com/pact-foundation/pact-reference/blob/master/rust/pact_ffi/IntegrationJson.md
+
+Release Checklist
+-----
+
+- Update version in `src/pact_erlang.app.src`
+- Update CHANGELOG.md
+- Run `rebar3 hex publish --dry-run` and make sure there are no un-intended files in included files
+- Commit files, add a git tag matching the new version, and push to remote
+- Run `rebar3 hex publish` to publish
