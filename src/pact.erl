@@ -4,6 +4,7 @@
     v4/2,
     interaction/2,
     verify/1,
+    write/1,
     write/2,
     cleanup/1
 ]).
@@ -32,6 +33,12 @@ interaction(PactPid, Interaction) ->
 verify(PactPid) ->
     pact_consumer:verify_interaction(PactPid).
 
+%% @doc writes pact to the default directory path `./pacts'
+-spec write(pact_pid()) -> ok.
+write(PactPid) ->
+    pact:write(PactPid, <<"./pacts">>).
+
+%% @doc writes pact to the given directory path
 -spec write(pact_pid(), binary()) -> ok.
 write(PactPid, Path) ->
     pact_consumer:write_interaction(PactPid, Path).

@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+Introduced pact:write/1 (#17).
+
 
 ## [0.2.0] - 2023-08-15
 

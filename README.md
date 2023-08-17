@@ -64,13 +64,16 @@ Users = user:get_users(<<"127.0.0.1">>, Port).
 %% Verify if everything matched successfully
 assertEqual({ok, matched}, pact:verify(PactRef)).
 
+%% Should write pact file if matched, creates a new folder `pacts'
+%% and writes the pact file inside it.
+pact:write(PactRef).
 
-%% Should write Pact File if matched
-pact:write(PactRef, "/path/to/pacts")
+%% Alternatively, one can override the default pacts directory path
+pact:write(PactRef, "/path/to/pacts").
 
 %% Cleanup test setup
 %% This won't cleanup the pact files, only the pact ref you created in the test setup
-pact:cleanup(PactRef)
+pact:cleanup(PactRef).
 ```
 Matching request path and request/response headers, and body values
 -----

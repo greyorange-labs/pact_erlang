@@ -53,7 +53,7 @@ get_animal_success(Config) ->
     }),
     ?assertMatch({ok, AnimalObject}, animal_service_interface:get_animal(Port, "Mary")),
     {ok, matched} = pact:verify(PactRef),
-    pact:write(PactRef, <<"./pacts">>).
+    pact:write(PactRef).
 
 get_animal_failure(Config) ->
     PactRef = ?config(pact_ref, Config),
@@ -74,7 +74,7 @@ get_animal_failure(Config) ->
     }),
     ?assertMatch({error, not_found}, animal_service_interface:get_animal(Port, "Miles")),
     {ok, matched} = pact:verify(PactRef),
-    pact:write(PactRef, <<"./pacts">>).
+    pact:write(PactRef).
 
 create_animal(Config) ->
     PactRef = ?config(pact_ref, Config),
@@ -96,7 +96,7 @@ create_animal(Config) ->
     }),
     ?assertMatch(ok, animal_service_interface:create_animal(Port, AnimalObject)),
     {ok, matched} = pact:verify(PactRef),
-    pact:write(PactRef, <<"./pacts">>).
+    pact:write(PactRef).
 
 search_animals(Config) ->
     PactRef = ?config(pact_ref, Config),
@@ -120,7 +120,7 @@ search_animals(Config) ->
     }),
     ?assertMatch({ok, Result}, animal_service_interface:search_animals(Port, Query)),
     {ok, matched} = pact:verify(PactRef),
-    pact:write(PactRef, <<"./pacts">>).
+    pact:write(PactRef).
 
 verify_producer(_Config) ->
     {ok, Port} = animal_service:start(0),
