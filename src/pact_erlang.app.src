@@ -1,7 +1,7 @@
 {application, pact_erlang, [
     {description,
         "Erlang wrapper for Pact. Pact is a contract testing framework for HTTP APIs and non-HTTP asynchronous messaging systems."},
-    {vsn, "0.2.1"},
+    {vsn, "0.2.2"},
     {modules, []},
     {registered, []},
     {applications, [kernel, stdlib, thoas]},
