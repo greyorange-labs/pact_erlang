@@ -17,6 +17,9 @@ ifeq ($(UNAME),Linux)
     ifeq ($(ARCHITECTURE), arm64)
         PACT_FILE_NAME := libpact_ffi-linux-aarch64.a
     endif
+	ifeq ($(ARCHITECTURE), aarch64)
+        PACT_FILE_NAME := libpact_ffi-linux-aarch64.a
+    endif
     ifeq ($(ARCHITECTURE), x86_64)
         PACT_FILE_NAME := libpact_ffi-linux-x86_64.a
     endif
