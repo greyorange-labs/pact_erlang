@@ -18,21 +18,24 @@
     regex_match/2
 ]).
 
--spec like(binary() | boolean() | number()) -> thoas:json_term().
+%% @doc function for matching with type of the given term
+-spec like(binary() | boolean() | number()) -> list().
 like(Term) ->
     [
         {<<"value">>, Term},
         {<<"pact:matcher:type">>, <<"type">>}
     ].
 
--spec each_like(binary() | boolean() | number()) -> thoas:json_term().
+%% @doc function for matching each entity inside a list with type of given term
+-spec each_like(binary() | boolean() | number()) -> list().
 each_like(Term) ->
     [
         {<<"value">>, [Term]},
         {<<"pact:matcher:type">>, <<"type">>}
     ].
 
--spec regex_match(binary() | boolean() | number(), binary()) -> thoas:json_term().
+%% @doc function for matching with regex
+-spec regex_match(binary() | boolean() | number(), binary()) -> list().
 regex_match(Value, Regex) ->
     [
         {<<"value">>, Value},
@@ -40,7 +43,8 @@ regex_match(Value, Regex) ->
         {<<"regex">>, Regex}
     ].
 
--spec each_key(binary() | boolean() | number(), binary()) -> thoas:json_term().
+%% @doc function for matching each key inside a map with regex
+-spec each_key(binary() | boolean() | number(), binary()) -> list().
 each_key(Value, Regex) ->
     [
         {<<"value">>, Value},
@@ -50,22 +54,34 @@ each_key(Value, Regex) ->
         ]}
     ].
 
+%% @doc function for matching integer
+-spec integer_or_identifier() -> list().
 integer_or_identifier() ->
     ?MODULE:integer_or_identifier(1).
+-spec integer_or_identifier(integer()) -> list().
 integer_or_identifier(Value) ->
     like(Value).
 
+%% @doc function for matching float
+-spec float() -> list().
 float() ->
     ?MODULE:float(1.0).
+-spec float(float()) -> list().
 float(Value) ->
     like(Value).
 
+%% @doc function for matching string
+-spec string() -> list().
 string() ->
     ?MODULE:string(<<"">>).
+-spec string(string()) -> list().
 string(Value) ->
     like(Value).
 
+%% @doc function for matching boolean
+-spec bool() -> list().
 bool() ->
     ?MODULE:bool(true).
+-spec bool(boolean()) -> list().
 bool(Value) ->
     like(Value).

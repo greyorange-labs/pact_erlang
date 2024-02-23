@@ -81,8 +81,27 @@ pact:cleanup(PactRef).
 Matching request path and request/response headers, and body values
 -----
 
-Easy-to-use matchers module is not implemented yet, but matchers can be used by manually specifying a matcher string.
-Check the possible values here: https://github.com/pact-foundation/pact-reference/blob/master/rust/pact_ffi/IntegrationJson.md
+```erlang
+%% Alternatively, you can also match things inside each request/response
+pact:interaction(PactRef,
+    #{
+        upon_receiving => <<"a request to create an animal: Lazgo">>,
+        with_request => #{
+            method => <<"POST">>,
+            path => <<"/animals">>,
+            headers => #{
+                <<"Content-Type">> => <<"application/json">>
+            },
+            body => thoas:encode(
+                {<<"name">>, pact_matchers:string(<<"Lazgo">>)},
+                {<<"type">>, pact_matchers:string(<<"dog">>)}
+            )
+        },
+        will_respond_with => #{
+            status => 201
+        }
+    })
+```
 
 Release Checklist
 -----
