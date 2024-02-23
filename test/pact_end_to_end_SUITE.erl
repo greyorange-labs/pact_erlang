@@ -104,7 +104,20 @@ get_animal_failure(Config) ->
 
 create_animal(Config) ->
     PactRef = ?config(pact_ref, Config),
-    AnimalObject = #{<<"name">> => <<"Max">>, <<"type">> => <<"dog">>},
+    AnimalPactObject = [
+        {<<"name">>, pact_matchers:string(<<"Max">>)},
+        {<<"type">>, pact_matchers:string(<<"dog">>)},
+        {<<"age">>, pact_matchers:integer_or_identifier(3)},
+        {<<"gender">>, pact_matchers:regex_match(<<"male">>, <<"(male|female)">>)},
+        {<<"carnivorous">>, pact_matchers:bool(true)}
+    ],
+    AnimalObject = [
+        {<<"name">>, <<"Max">>},
+        {<<"type">>, <<"dog">>},
+        {<<"age">>, 3},
+        {<<"gender">>, <<"male">>},
+        {<<"carnivorous">>, true}
+    ],
     {ok, Port} = pact:interaction(PactRef,
     #{
         upon_receiving => <<"a request to create an animal: Max">>,
@@ -114,7 +127,7 @@ create_animal(Config) ->
             headers => #{
                 <<"Content-Type">> => <<"application/json">>
             },
-            body => thoas:encode(AnimalObject)
+            body => thoas:encode(AnimalPactObject)
         },
         will_respond_with => #{
             status => 201
