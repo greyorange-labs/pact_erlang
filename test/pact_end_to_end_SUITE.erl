@@ -109,14 +109,16 @@ create_animal(Config) ->
         {<<"type">>, pact_matchers:string(<<"dog">>)},
         {<<"age">>, pact_matchers:integer_or_identifier(3)},
         {<<"gender">>, pact_matchers:regex_match(<<"male">>, <<"(male|female)">>)},
-        {<<"carnivorous">>, pact_matchers:bool(true)}
+        {<<"carnivorous">>, pact_matchers:bool(true)},
+        {<<"siblings">>, pact_matchers:each_like(<<"lola">>)}
     ],
     AnimalObject = [
         {<<"name">>, <<"Max">>},
         {<<"type">>, <<"dog">>},
         {<<"age">>, 3},
         {<<"gender">>, <<"male">>},
-        {<<"carnivorous">>, true}
+        {<<"carnivorous">>, true},
+        {<<"siblings">>, [<<"lola">>, <<"mary">>]}
     ],
     {ok, Port} = pact:interaction(PactRef,
     #{
