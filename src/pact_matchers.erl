@@ -74,7 +74,7 @@ float(Value) ->
 -spec string() -> list().
 string() ->
     ?MODULE:string(<<"">>).
--spec string(string()) -> list().
+-spec string(binary()) -> list().
 string(Value) ->
     like(Value).
 
