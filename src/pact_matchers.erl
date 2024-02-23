@@ -1,6 +1,5 @@
 -module(pact_matchers).
 
-
 -export([
     integer_or_identifier/0,
     integer_or_identifier/1,
@@ -12,7 +11,6 @@
     bool/1
 ]).
 
-
 -export([
     like/1,
     each_like/1,
@@ -20,21 +18,21 @@
     regex_match/2
 ]).
 
--spec like(binary() | boolean() | number()) ->  thoas:json_term().
+-spec like(binary() | boolean() | number()) -> thoas:json_term().
 like(Term) ->
     [
         {<<"value">>, Term},
         {<<"pact:matcher:type">>, <<"type">>}
     ].
 
--spec each_like(binary() | boolean() | number()) ->  thoas:json_term().
+-spec each_like(binary() | boolean() | number()) -> thoas:json_term().
 each_like(Term) ->
     [
         {<<"value">>, [Term]},
         {<<"pact:matcher:type">>, <<"type">>}
     ].
 
--spec regex_match(binary() | boolean() | number(), binary()) ->  thoas:json_term().
+-spec regex_match(binary() | boolean() | number(), binary()) -> thoas:json_term().
 regex_match(Value, Regex) ->
     [
         {<<"value">>, Value},
@@ -42,7 +40,7 @@ regex_match(Value, Regex) ->
         {<<"regex">>, Regex}
     ].
 
--spec each_key(binary() | boolean() | number(), binary()) ->  thoas:json_term().
+-spec each_key(binary() | boolean() | number(), binary()) -> thoas:json_term().
 each_key(Value, Regex) ->
     [
         {<<"value">>, Value},
@@ -55,7 +53,7 @@ each_key(Value, Regex) ->
 integer_or_identifier() ->
     ?MODULE:integer_or_identifier(1).
 integer_or_identifier(Value) ->
-    like(Value).   
+    like(Value).
 
 float() ->
     ?MODULE:float(1.0).
