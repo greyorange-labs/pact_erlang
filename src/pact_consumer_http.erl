@@ -52,8 +52,8 @@ init_interaction(PactPid, Interaction) ->
         undefined ->
             ok;
         GivenStateWithParams when is_map(GivenStateWithParams) ->
-            ProviderState = maps:get(description, GivenStateWithParams, <<"">>),
-            StateJson = maps:get(parameters, GivenStateWithParams, undefined),
+            ProviderState = maps:get(state, GivenStateWithParams, <<"">>),
+            StateJson = maps:get(params, GivenStateWithParams, undefined),
             case StateJson of
                 undefined ->
                     pactffi_nif:given(InteractionRef, ProviderState);

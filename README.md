@@ -42,7 +42,7 @@ PactRef = pact:v4(<<"consumer">>, <<"producer">>).
 {ok, Port} = pact:interaction(PactRef,
     #{
         given => #{
-            description => <<"a user ranjan exists">>
+            state => <<"a user ranjan exists">>
         },
         upon_receiving => <<"get all users">>,
         with_request => #{

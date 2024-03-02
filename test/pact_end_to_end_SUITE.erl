@@ -38,8 +38,8 @@ get_animal_success(Config) ->
     {ok, Port} = pact:interaction(PactRef,
     #{
         given => #{
-            description => <<"an alligator with the name Mary exists">>,
-            parameters => thoas:encode(AnimalObject)
+            state => <<"an alligator with the name Mary exists">>,
+            params => thoas:encode(AnimalObject)
         },
         upon_receiving => <<"a request to GET an animal: Mary">>,
         with_request => #{
@@ -109,7 +109,7 @@ search_animals(Config) ->
     {ok, Port} = pact:interaction(PactRef,
     #{
         given => #{
-            description => <<"an alligator with the name Mary exists">>
+            state => <<"an alligator with the name Mary exists">>
         },
         upon_receiving => <<"a request to find all alligators">>,
         with_request => #{
