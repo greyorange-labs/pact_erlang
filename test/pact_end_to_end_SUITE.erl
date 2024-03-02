@@ -109,8 +109,7 @@ search_animals(Config) ->
     {ok, Port} = pact:interaction(PactRef,
     #{
         given => #{
-            description => <<"an alligator with the name Mary exists">>,
-            parameters => thoas:encode(AnimalObj)
+            description => <<"an alligator with the name Mary exists">>
         },
         upon_receiving => <<"a request to find all alligators">>,
         with_request => #{
