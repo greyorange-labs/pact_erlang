@@ -37,7 +37,10 @@ get_animal_success(Config) ->
     AnimalObject = #{<<"name">> => <<"Mary">>, <<"type">> => <<"alligator">>},
     {ok, Port} = pact:interaction(PactRef,
     #{
-        given => <<"an alligator with the name Mary exists">>,
+        given => #{
+            description => <<"an alligator with the name Mary exists">>,
+            parameters => thoas:encode(AnimalObject)
+        },
         upon_receiving => <<"a request to GET an animal: Mary">>,
         with_request => #{
             method => <<"GET">>,
@@ -100,11 +103,15 @@ create_animal(Config) ->
 
 search_animals(Config) ->
     PactRef = ?config(pact_ref, Config),
+    AnimalObj = #{<<"name">> => <<"Mary">>, <<"type">> => <<"alligator">>},
     Result = #{<<"animals">> => [#{<<"name">> => <<"Mary">>, <<"type">> => <<"alligator">>}]},
     Query = #{<<"type">> => <<"alligator">>},
     {ok, Port} = pact:interaction(PactRef,
     #{
-        given => <<"an alligator with the name Mary exists">>,
+        given => #{
+            description => <<"an alligator with the name Mary exists">>,
+            parameters => thoas:encode(AnimalObj)
+        },
         upon_receiving => <<"a request to find all alligators">>,
         with_request => #{
             method => <<"GET">>,

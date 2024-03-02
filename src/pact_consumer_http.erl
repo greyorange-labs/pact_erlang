@@ -49,8 +49,17 @@ init_interaction(PactPid, Interaction) ->
     InteractionDesc = maps:get(upon_receiving, Interaction, <<"">>),
     InteractionRef = pactffi_nif:new_interaction(PactRef, InteractionDesc),
     case maps:get(given, Interaction, undefined) of
-        undefined -> ok;
-        GivenState -> pactffi_nif:given(InteractionRef, GivenState)
+        undefined ->
+            ok;
+        GivenStateWithParams when is_map(GivenStateWithParams) ->
+            ProviderState = maps:get(description, GivenStateWithParams, <<"">>),
+            StateJson = maps:get(parameters, GivenStateWithParams, undefined),
+            case StateJson of
+                undefined ->
+                    pactffi_nif:given(InteractionRef, GivenState);
+                _ ->
+                    pactffi_nif:given_with_params(InteractionRef, GivenState, StateJson)
+            end
     end,
     ok = pact_ref_server:create_interaction(PactPid, InteractionRef, Interaction),
     {PactRef, InteractionRef}.
