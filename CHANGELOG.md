@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Introduced ability to add params inside given in pact interaction
 
 ## [0.2.2] - 2023-11-03
 

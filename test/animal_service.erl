@@ -104,7 +104,14 @@ process_data(#mod{request_uri = "/pactStateChange", method = "POST", entity_body
     case RequiredState of
         <<"">> -> reset_data();
         <<"an alligator with the name Mary exists">> ->
-            insert_animal(<<"Mary">>, <<"alligator">>)
+            case maps:get(<<"params">>, StateRequest, undefined) of
+                undefined ->
+                    insert_animal(<<"Mary">>, <<"alligator">>);
+                Params ->
+                    Name = maps:get(<<"name">>, Params, <<"">>),
+                    Type = maps:get(<<"type">>, Params, <<"">>),
+                    insert_animal(Name, Type)
+            end
     end,
     make_json_response(200, #{ok => true}).
 
