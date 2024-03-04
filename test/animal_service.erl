@@ -111,7 +111,9 @@ process_data(#mod{request_uri = "/pactStateChange", method = "POST", entity_body
                     Name = maps:get(<<"name">>, Params, <<"">>),
                     Type = maps:get(<<"type">>, Params, <<"">>),
                     insert_animal(Name, Type)
-            end
+            end;
+        <<"a dog with the name Duke exists">> ->
+            insert_animal(<<"Duke">>, <<"dog">>)
     end,
     make_json_response(200, #{ok => true}).
 

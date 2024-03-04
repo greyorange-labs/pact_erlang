@@ -9,7 +9,7 @@ all() -> [{group, consumer}, {group, producer}].
 
 groups() ->
     [
-        {consumer, [get_animal_success, get_animal_failure, create_animal, search_animals]},
+        {consumer, [get_animal_success, get_animal_success_2, get_animal_failure, create_animal, search_animals]},
         {producer, [verify_producer]}
     ].
 
@@ -55,6 +55,29 @@ get_animal_success(Config) ->
         }
     }),
     ?assertMatch({ok, AnimalObject}, animal_service_interface:get_animal(Port, "Mary")),
+    {ok, matched} = pact:verify(PactRef),
+    pact:write(PactRef).
+
+get_animal_success_2(Config) ->
+    PactRef = ?config(pact_ref, Config),
+    AnimalObject = #{<<"name">> => <<"Duke">>, <<"type">> => <<"Dog">>},
+    {ok, Port} = pact:interaction(PactRef,
+    #{
+        given => <<"a dog with the name Duke exists">>,
+        upon_receiving => <<"a request to GET an animal: Duke">>,
+        with_request => #{
+            method => <<"GET">>,
+            path => <<"/animals/Duke">>
+        },
+        will_respond_with => #{
+            status => 200,
+            headers => #{
+                <<"Content-Type">> => <<"application/json">>
+            },
+            body => thoas:encode(AnimalObject)
+        }
+    }),
+    ?assertMatch({ok, AnimalObject}, animal_service_interface:get_animal(Port, "Duke")),
     {ok, matched} = pact:verify(PactRef),
     pact:write(PactRef).
 
