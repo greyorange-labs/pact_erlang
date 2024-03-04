@@ -113,7 +113,7 @@ process_data(#mod{request_uri = "/pactStateChange", method = "POST", entity_body
                     insert_animal(Name, Type)
             end;
         <<"a dog with the name Duke exists">> ->
-            insert_animal(<<"Duke">>, <<"dog">>)
+            insert_animal(<<"Duke">>, <<"Dog">>)
     end,
     make_json_response(200, #{ok => true}).
 
