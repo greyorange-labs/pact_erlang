@@ -16,7 +16,7 @@ like(Term) when (is_integer(Term) orelse is_binary(Term) orelse is_boolean(Term)
     };
 like(Term) when (is_map(Term)) ->
     maps:map(
-        fun(Key, InitValue) ->
+        fun(_Key, InitValue) ->
             ?MODULE:like(InitValue)
         end,
         Term
@@ -31,7 +31,7 @@ each_like(Term) when (is_integer(Term) orelse is_binary(Term) orelse is_boolean(
     };
 each_like(Term) when (is_map(Term)) ->
     maps:map(
-        fun(Key, InitValue) ->
+        fun(_Key, InitValue) ->
             ?MODULE:each_like(InitValue)
         end,
         Term
