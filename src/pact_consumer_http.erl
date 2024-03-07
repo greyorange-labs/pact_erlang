@@ -82,7 +82,7 @@ insert_request_details(InteractionRef, RequestDetails) ->
     %% Checking if someone used regex_match
     CheckIfMap =
         fun(Value) ->
-            case is_map(Value, 2) of
+            case is_map(Value) of
                 true ->
                     thoas:encode(Value);
                 false ->
@@ -131,7 +131,7 @@ insert_response_details(InteractionRef, ResponseDetails) ->
     %% Checking if someone used regex_match
     CheckIfMap =
         fun(Value) ->
-            case is_map(Value, 2) of
+            case is_map(Value) of
                 true ->
                     thoas:encode(Value);
                 false ->
