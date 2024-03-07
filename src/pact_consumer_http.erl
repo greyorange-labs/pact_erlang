@@ -79,15 +79,27 @@ start_mock_server(PactPid, PactRef, Host, Port, InteractionPart) ->
 
 -spec insert_request_details(pact_interaction_ref(), request_details()) -> ok.
 insert_request_details(InteractionRef, RequestDetails) ->
+    %% Checking if someone used regex_match
+    CheckIfMap =
+        fun(Value) ->
+            case is_map(Value, 2) of
+                true ->
+                    thoas:encode(Value);
+                false ->
+                    Value
+            end
+        end,
     ReqMethod = maps:get(method, RequestDetails),
     ReqPath = maps:get(path, RequestDetails),
-    pactffi_nif:with_request(InteractionRef, ReqMethod, thoas:encode(ReqPath)),
+    NewReqPath = CheckIfMap(ReqPath),
+    pactffi_nif:with_request(InteractionRef, ReqMethod, NewReqPath),
     ReqHeaders = maps:get(headers, RequestDetails, #{}),
     ContentType = get_content_type(ReqHeaders),
     maps:fold(
         fun(Key, Value, _Acc) ->
             %% FIXME: 4th parameter is Index.. need to increment
-            pactffi_nif:with_header_v2(InteractionRef, 0, Key, 0, thoas:encode(Value))
+            NewValue = CheckIfMap(Value),
+            pactffi_nif:with_header_v2(InteractionRef, 0, Key, 0, NewValue)
         end,
         ok,
         ReqHeaders
@@ -105,7 +117,8 @@ insert_request_details(InteractionRef, RequestDetails) ->
             maps:fold(
                 fun(Key, Value, _Acc) ->
                     %% FIXME: 3rd parameter is Index.. need to increment
-                    pactffi_nif:with_query_parameter_v2(InteractionRef, Key, 0, thoas:encode(Value))
+                    NewValue = CheckIfMap(Value),
+                    pactffi_nif:with_query_parameter_v2(InteractionRef, Key, 0, NewValue)
                 end,
                 ok,
                 ReqQueryParams
@@ -115,6 +128,16 @@ insert_request_details(InteractionRef, RequestDetails) ->
 
 -spec insert_response_details(pact_interaction_ref(), response_details()) -> ok.
 insert_response_details(InteractionRef, ResponseDetails) ->
+    %% Checking if someone used regex_match
+    CheckIfMap =
+        fun(Value) ->
+            case is_map(Value, 2) of
+                true ->
+                    thoas:encode(Value);
+                false ->
+                    Value
+            end
+        end,
     ResponseStatusCode = maps:get(status, ResponseDetails, undefined),
     case ResponseStatusCode of
         undefined -> ok;
@@ -125,7 +148,8 @@ insert_response_details(InteractionRef, ResponseDetails) ->
     maps:fold(
         fun(Key, Value, _Acc) ->
             %% FIXME: 4th parameter is Index.. need to increment
-            pactffi_nif:with_header_v2(InteractionRef, 1, Key, 0, thoas:encode(Value))
+            NewValue = CheckIfMap(Value),
+            pactffi_nif:with_header_v2(InteractionRef, 1, Key, 0, NewValue)
         end,
         ok,
         ResHeaders
