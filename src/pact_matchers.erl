@@ -8,7 +8,7 @@
 ]).
 
 %% @doc Function for matching with type of the given term
--spec like(binary() | boolean() | number() |  list() | map()) -> map().
+-spec like(binary() | boolean() | number() | list() | map()) -> map().
 like(Term) when (is_number(Term) orelse is_binary(Term) orelse is_boolean(Term)) ->
     #{
         <<"value">> => Term,
