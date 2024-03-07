@@ -121,7 +121,7 @@ create_animal(Config) ->
         <<"age">> => 3,
         <<"nickname">> => <<"lazgo">>,
         <<"weight_kg">> => 10.0,
-        <<"gender">> => pact_matchers:regex_match(<<"male">>, <<"(male|female)">>),,
+        <<"gender">> => pact_matchers:regex_match(<<"male">>, <<"(male|female)">>),
         <<"carnivorous">> => true,
         <<"siblings">> => pact_matchers:each_like(<<"lola">>),
         <<"attributes">> => pact_matchers:each_key(#{<<"happy">> => true}, <<"(happy|ferocious)">>)
