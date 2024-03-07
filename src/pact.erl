@@ -10,7 +10,7 @@
     like/1,
     each_like/1,
     regex_match/2,
-    each_key/2,
+    each_key/2
 ]).
 
 -type consumer() :: binary().
