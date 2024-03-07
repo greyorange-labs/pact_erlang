@@ -60,16 +60,16 @@ like(Term) ->
 
 %% @doc Asserts the Term is an array type that consists of elements
 %% Like the one passed in
--spec like(any()) -> map().
+-spec each_like(any()) -> map().
 each_like(Term) ->
     pact_matchers:each_like(Term).
 
 %% @doc Asserts the value should match the given regular expression
--spec like(binary() | boolean() | number(), binary()) -> map().
+-spec regex_match(binary() | boolean() | number(), binary()) -> map().
 regex_match(Value, Regex) ->
     pact_matchers:regex_match(Value, Regex).
 
 %% @doc Asserts that each key of Value should match the given regular expression
--spec like(binary() | boolean() | number(), binary()) -> map().
+-spec each_key(binary() | boolean() | number(), binary()) -> map().
 each_key(Value, Regex) ->
     pact_matchers:each_key(Value, Regex).
