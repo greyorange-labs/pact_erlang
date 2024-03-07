@@ -118,13 +118,13 @@ create_animal(Config) ->
     AnimalPactObject = #{
         <<"name">> => <<"Max">>,
         <<"type">> => <<"dog">>,
-        <<"age">> => 1,
-        <<"nickname">> => <<"koko">>,
-        <<"weight_kg">> => 12.0,
-        <<"gender">> => pact_matchers:regex_match(<<"male">>, <<"(male|female)">>),
+        <<"age">> => 3,
+        <<"nickname">> => <<"lazgo">>,
+        <<"weight_kg">> => 10.0,
+        <<"gender">> => <<"male">>,
         <<"carnivorous">> => true,
-        <<"siblings">> => pact_matchers:each_like(<<"lola">>),
-        <<"attributes">> => pact_matchers:each_key(#{<<"happy">> => true}, <<"(happy|ferocious)">>)
+        <<"siblings">> => [<<"lola">>, <<"mary">>],
+        <<"attributes">> => #{<<"ferocious">> => false}
     },
     AnimalObject = [
         {<<"name">>, <<"Max">>},
