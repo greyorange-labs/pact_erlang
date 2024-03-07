@@ -81,13 +81,13 @@ start_mock_server(PactPid, PactRef, Host, Port, InteractionPart) ->
 insert_request_details(InteractionRef, RequestDetails) ->
     ReqMethod = maps:get(method, RequestDetails),
     ReqPath = maps:get(path, RequestDetails),
-    pactffi_nif:with_request(InteractionRef, ReqMethod, ReqPath),
+    pactffi_nif:with_request(InteractionRef, ReqMethod, thoas:encode(ReqPath)),
     ReqHeaders = maps:get(headers, RequestDetails, #{}),
     ContentType = get_content_type(ReqHeaders),
     maps:fold(
         fun(Key, Value, _Acc) ->
             %% FIXME: 4th parameter is Index.. need to increment
-            pactffi_nif:with_header_v2(InteractionRef, 0, Key, 0, Value)
+            pactffi_nif:with_header_v2(InteractionRef, 0, Key, 0, thoas:encode(Value))
         end,
         ok,
         ReqHeaders
@@ -95,7 +95,7 @@ insert_request_details(InteractionRef, RequestDetails) ->
     ReqBody = maps:get(body, RequestDetails, undefined),
     case ReqBody of
         undefined -> ok;
-        _ -> pactffi_nif:with_body(InteractionRef, 0, ContentType, ReqBody)
+        _ -> pactffi_nif:with_body(InteractionRef, 0, ContentType, thoas:encode(ReqBody))
     end,
     ReqQueryParams = maps:get(query_params, RequestDetails, undefined),
     case ReqQueryParams of
@@ -105,7 +105,7 @@ insert_request_details(InteractionRef, RequestDetails) ->
             maps:fold(
                 fun(Key, Value, _Acc) ->
                     %% FIXME: 3rd parameter is Index.. need to increment
-                    pactffi_nif:with_query_parameter_v2(InteractionRef, Key, 0, Value)
+                    pactffi_nif:with_query_parameter_v2(InteractionRef, Key, 0, thoas:encode(Value))
                 end,
                 ok,
                 ReqQueryParams
@@ -125,7 +125,7 @@ insert_response_details(InteractionRef, ResponseDetails) ->
     maps:fold(
         fun(Key, Value, _Acc) ->
             %% FIXME: 4th parameter is Index.. need to increment
-            pactffi_nif:with_header_v2(InteractionRef, 1, Key, 0, Value)
+            pactffi_nif:with_header_v2(InteractionRef, 1, Key, 0, thoas:encode(Value))
         end,
         ok,
         ResHeaders
@@ -133,7 +133,7 @@ insert_response_details(InteractionRef, ResponseDetails) ->
     ResBody = maps:get(body, ResponseDetails, undefined),
     case ResBody of
         undefined -> ok;
-        _ -> pactffi_nif:with_body(InteractionRef, 1, ContentType, ResBody)
+        _ -> pactffi_nif:with_body(InteractionRef, 1, ContentType, thoas:encode(ResBody))
     end,
     ok.
 

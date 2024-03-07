@@ -51,7 +51,7 @@ get_animal_success(Config) ->
             headers => #{
                 <<"Content-Type">> => <<"application/json">>
             },
-            body => thoas:encode(AnimalObject)
+            body => AnimalObject
         }
     }),
     ?assertMatch({ok, AnimalObject}, animal_service_interface:get_animal(Port, "Mary")),
@@ -95,7 +95,7 @@ get_animal_failure(Config) ->
             headers => #{
                 <<"Content-Type">> => <<"application/json">>
             },
-            body => thoas:encode(#{error => not_found})
+            body => #{error => not_found}
         }
     }),
     ?assertMatch({error, not_found}, animal_service_interface:get_animal(Port, "Miles")),
@@ -104,17 +104,17 @@ get_animal_failure(Config) ->
 
 create_animal(Config) ->
     PactRef = ?config(pact_ref, Config),
-    AnimalPactObject = [
-        {<<"name">>, pact_matchers:string(<<"Max">>)},
-        {<<"type">>, pact_matchers:string(<<"dog">>)},
-        {<<"age">>, pact_matchers:integer_or_identifier()},
-        {<<"nickname">>, pact_matchers:string()},
-        {<<"weight_kg">>, pact_matchers:float()},
-        {<<"gender">>, pact_matchers:regex_match(<<"male">>, <<"(male|female)">>)},
-        {<<"carnivorous">>, pact_matchers:bool()},
-        {<<"siblings">>, pact_matchers:each_like(<<"lola">>)},
-        {<<"attributes">>, pact_matchers:each_key([{<<"happy">>, true}], <<"(happy|ferocious)">>)}
-    ],
+    AnimalPactObject = pact:like(#{
+        <<"name">> => <<"Max">>,
+        <<"type">> => <<"dog">>,
+        <<"age">> => 1,
+        <<"nickname">> => <<"koko">>,
+        <<"weight_kg">> => 12.0,
+        <<"gender">> => pact_matchers:regex_match(<<"male">>, <<"(male|female)">>),
+        <<"carnivorous">> => true,
+        <<"siblings">> => pact_matchers:each_like(<<"lola">>),
+        <<"attributes">> => pact_matchers:each_key(#{<<"happy">> => true}, <<"(happy|ferocious)">>)
+    }),
     AnimalObject = [
         {<<"name">>, <<"Max">>},
         {<<"type">>, <<"dog">>},
@@ -135,7 +135,7 @@ create_animal(Config) ->
             headers => #{
                 <<"Content-Type">> => <<"application/json">>
             },
-            body => thoas:encode(AnimalPactObject)
+            body => AnimalPactObject
         },
         will_respond_with => #{
             status => 201
@@ -165,7 +165,7 @@ search_animals(Config) ->
             headers => #{
                 <<"Content-Type">> => <<"application/json">>
             },
-            body => thoas:encode(Result)
+            body => Result
         }
     }),
     ?assertMatch({ok, Result}, animal_service_interface:search_animals(Port, Query)),
