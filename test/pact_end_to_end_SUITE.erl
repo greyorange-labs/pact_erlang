@@ -104,28 +104,28 @@ get_animal_failure(Config) ->
 
 create_animal(Config) ->
     PactRef = ?config(pact_ref, Config),
-    % AnimalPactObject = pact:like(#{
-    %     <<"name">> => <<"Max">>,
-    %     <<"type">> => <<"dog">>,
-    %     <<"age">> => 1,
-    %     <<"nickname">> => <<"koko">>,
-    %     <<"weight_kg">> => 12.0,
-    %     <<"gender">> => pact_matchers:regex_match(<<"male">>, <<"(male|female)">>),
-    %     <<"carnivorous">> => true,
-    %     <<"siblings">> => pact_matchers:each_like(<<"lola">>),
-    %     <<"attributes">> => pact_matchers:each_key(#{<<"happy">> => true}, <<"(happy|ferocious)">>)
-    % }),
-    AnimalPactObject = #{
+    AnimalPactObject = pact:like(#{
         <<"name">> => <<"Max">>,
         <<"type">> => <<"dog">>,
-        <<"age">> => 3,
-        <<"nickname">> => <<"lazgo">>,
-        <<"weight_kg">> => 10.0,
+        <<"age">> => 1,
+        <<"nickname">> => <<"koko">>,
+        <<"weight_kg">> => 12.0,
         <<"gender">> => pact_matchers:regex_match(<<"male">>, <<"(male|female)">>),
         <<"carnivorous">> => true,
         <<"siblings">> => pact_matchers:each_like(<<"lola">>),
         <<"attributes">> => pact_matchers:each_key(#{<<"happy">> => true}, <<"(happy|ferocious)">>)
-    },
+    }),
+    % AnimalPactObject = #{
+    %     <<"name">> => <<"Max">>,
+    %     <<"type">> => <<"dog">>,
+    %     <<"age">> => 3,
+    %     <<"nickname">> => <<"lazgo">>,
+    %     <<"weight_kg">> => 10.0,
+    %     <<"gender">> => pact_matchers:regex_match(<<"male">>, <<"(male|female)">>),
+    %     <<"carnivorous">> => true,
+    %     <<"siblings">> => pact_matchers:each_like(<<"lola">>),
+    %     <<"attributes">> => pact_matchers:each_key(#{<<"happy">> => true}, <<"(happy|ferocious)">>)
+    % },
     AnimalObject = [
         {<<"name">>, <<"Max">>},
         {<<"type">>, <<"dog">>},

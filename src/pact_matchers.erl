@@ -23,12 +23,18 @@ like(Term) when (is_list(Term)) ->
         Term
     );
 like(Term) when (is_map(Term)) ->
-    maps:map(
-        fun(_Key, InitValue) ->
-            ?MODULE:like(InitValue)
-        end,
-        Term
-    ).
+    Keys = maps:keys(Term),
+    case lists:member(<<"pact:matcher:type">>, Keys) of
+        true ->
+            Term;
+        false ->
+            maps:map(
+                fun(_Key, InitValue) ->
+                    ?MODULE:like(InitValue)
+                end,
+                Term
+            )
+    end.
 
 %% @doc Function for matching each entity inside a list with type of given term
 -spec each_like(binary() | boolean() | number() | map() | list()) -> map().
@@ -46,12 +52,18 @@ each_like(Term) when (is_list(Term)) ->
         Term
     );
 each_like(Term) when (is_map(Term)) ->
-    maps:map(
-        fun(_Key, InitValue) ->
-            ?MODULE:each_like(InitValue)
-        end,
-        Term
-    ).
+    Keys = maps:keys(Term),
+    case lists:member(<<"pact:matcher:type">>, Keys) of
+        true ->
+            Term;
+        false ->
+            maps:map(
+                fun(_Key, InitValue) ->
+                    ?MODULE:each_like(InitValue)
+                end,
+                Term
+            )
+    end.
 
 %% @doc Function for matching with regex
 -spec regex_match(binary() | boolean() | number() | map() | list(), binary()) -> map().
