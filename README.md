@@ -92,10 +92,10 @@ pact:interaction(PactRef,
             headers => #{
                 <<"Content-Type">> => <<"application/json">>
             },
-            body => thoas:encode(
-                {<<"name">>, pact_matchers:string(<<"Lazgo">>)},
-                {<<"type">>, pact_matchers:string(<<"dog">>)}
-            )
+            body => #{
+                <<"name">> => pact:like(<<"Lazgo">>),
+                <<"type">> => pact:like(<<"dog">>)
+            }
         },
         will_respond_with => #{
             status => 201
