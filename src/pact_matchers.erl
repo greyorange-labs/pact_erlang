@@ -47,18 +47,7 @@ each_like(Term) when (is_list(Term)) ->
     List =
         lists:foldr(
             fun(Elem, Acc) ->
-                case is_map(Elem) of
-                    true ->
-                        KeyPresent = maps:get(<<"pact:matcher:type">>, Elem, undefined),
-                        case KeyPresent of
-                            undefined ->
-                                [?MODULE:like(Elem) | Acc];
-                            _ ->
-                                Elem
-                        end;
-                    false ->
-                        [?MODULE:like(Elem) | Acc]
-                end
+                [?MODULE:like(Elem) | Acc]
             end,
             [],
             Term
