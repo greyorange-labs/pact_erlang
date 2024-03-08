@@ -23,17 +23,17 @@ like(Term) when (is_list(Term)) ->
         Term
     );
 like(Term) when (is_map(Term)) ->
-    Keys = maps:keys(Term),
-    case lists:member(<<"pact:matcher:type">>, Keys) of
-        true ->
-            Term;
-        false ->
+    KeyPresent = maps:get(<<"pact:matcher:type">>, Term, undefined),
+    case KeyPresent of
+        undefined ->
             maps:map(
                 fun(_Key, InitValue) ->
                     ?MODULE:like(InitValue)
                 end,
                 Term
-            )
+            );
+        _ ->
+            Term
     end.
 
 %% @doc Function for matching each entity inside a list with type of given term
@@ -44,23 +44,42 @@ each_like(Term) when (is_number(Term) orelse is_binary(Term) orelse is_boolean(T
         <<"pact:matcher:type">> => <<"type">>
     };
 each_like(Term) when (is_list(Term)) ->
+    List =
+        lists:foldr(
+            fun(Elem, Acc) ->
+                case is_map(Elem) of
+                    true ->
+                        KeyPresent = maps:get(<<"pact:matcher:type">>, Elem, undefined),
+                        case KeyPresent of
+                            undefined ->
+                                [?MODULE:like(Elem) | Acc];
+                            _ ->
+                                Elem
+                        end;
+                    false ->
+                        Elem
+                end
+            end,
+            [],
+            Term
+        ),
     #{
-        <<"value">> => Term,
+        <<"value">> => [List],
         <<"pact:matcher:type">> => <<"type">>
     };
 each_like(Term) when (is_map(Term)) ->
-    Keys = maps:keys(Term),
+    KeyPresent = maps:get(<<"pact:matcher:type">>, Term, undefined),
     Map =
-        case lists:member(<<"pact:matcher:type">>, Keys) of
-            true ->
-                Term;
-            false ->
+        case KeyPresent of
+            undefined ->
                 maps:map(
                     fun(_Key, InitValue) ->
                         ?MODULE:like(InitValue)
                     end,
                     Term
-                )
+                );
+            _ ->
+                Term
         end,
     #{
         <<"value">> => [Map],

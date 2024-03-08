@@ -113,6 +113,7 @@ create_animal(Config) ->
         <<"gender">> => pact:regex_match(<<"male">>, <<"(male|female)">>),
         <<"carnivorous">> => true,
         <<"siblings">> => pact:each_like(<<"lola">>),
+        <<"list_att">> => pact:each_like([1,pact:like(<<"head">>)]),
         <<"children">> => [<<"coco">>],
         <<"children_details">> => pact:each_like(#{<<"name">> => <<"coco">>, <<"age">> => 1, <<"body_size">> => [3,4,5]}),
         <<"attributes">> => pact:each_key(#{<<"happy">> => true}, <<"(happy|ferocious)">>)
