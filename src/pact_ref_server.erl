@@ -13,6 +13,8 @@
 ]).
 -export([init/1, handle_call/3, terminate/2]).
 
+-dialyzer(no_undefined_callbacks).
+
 -type pact_ref() :: integer().
 -type pact_interaction_ref() :: integer().
 -type consumer() :: binary().
