@@ -106,7 +106,8 @@ insert_request_details(InteractionRef, RequestDetails) ->
     ),
     ReqBody = maps:get(body, RequestDetails, undefined),
     case ReqBody of
-        undefined -> ok;
+        undefined ->
+            ok;
         _ ->
             NewReqBody = CheckIfMap(ReqBody),
             pactffi_nif:with_body(InteractionRef, 0, ContentType, NewReqBody)
@@ -158,7 +159,8 @@ insert_response_details(InteractionRef, ResponseDetails) ->
     ),
     ResBody = maps:get(body, ResponseDetails, undefined),
     case ResBody of
-        undefined -> ok;
+        undefined ->
+            ok;
         _ ->
             NewResBody = CheckIfMap(ResBody),
             pactffi_nif:with_body(InteractionRef, 1, ContentType, NewResBody)
