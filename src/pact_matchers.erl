@@ -57,19 +57,7 @@ each_like(Term) when (is_list(Term)) ->
         <<"pact:matcher:type">> => <<"type">>
     };
 each_like(Term) when (is_map(Term)) ->
-    KeyPresent = maps:get(<<"pact:matcher:type">>, Term, undefined),
-    Map =
-        case KeyPresent of
-            undefined ->
-                maps:map(
-                    fun(_Key, InitValue) ->
-                        ?MODULE:like(InitValue)
-                    end,
-                    Term
-                );
-            _ ->
-                Term
-        end,
+    Map = ?MODULE:like(Term),
     #{
         <<"value">> => [Map],
         <<"pact:matcher:type">> => <<"type">>
