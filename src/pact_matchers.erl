@@ -57,7 +57,7 @@ each_like(Term) when (is_list(Term)) ->
                                 Elem
                         end;
                     false ->
-                        Elem
+                        [?MODULE:like(Elem) | Acc]
                 end
             end,
             [],
