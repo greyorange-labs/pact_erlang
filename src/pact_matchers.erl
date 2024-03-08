@@ -9,19 +9,6 @@
 
 %% @doc Function for matching with type of the given term
 -spec like(binary() | boolean() | number() | list() | map()) -> map().
-like(Term) when (is_number(Term) orelse is_binary(Term) orelse is_boolean(Term)) ->
-    #{
-        <<"value">> => Term,
-        <<"pact:matcher:type">> => <<"type">>
-    };
-like(Term) when (is_list(Term)) ->
-    lists:foldr(
-        fun(Elem, Acc) ->
-            [?MODULE:like(Elem) | Acc]
-        end,
-        [],
-        Term
-    );
 like(Term) when (is_map(Term)) ->
     KeyPresent = maps:get(<<"pact:matcher:type">>, Term, undefined),
     case KeyPresent of
@@ -34,7 +21,12 @@ like(Term) when (is_map(Term)) ->
             );
         _ ->
             Term
-    end.
+    end;
+like(Term) ->
+    #{
+        <<"value">> => Term,
+        <<"pact:matcher:type">> => <<"type">>
+    }.
 
 %% @doc Function for matching each entity inside a list with type of given term
 -spec each_like(binary() | boolean() | number() | map() | list()) -> map().
