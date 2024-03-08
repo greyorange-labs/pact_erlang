@@ -51,7 +51,7 @@ get_animal_success(Config) ->
             headers => #{
                 <<"Content-Type">> => <<"application/json">>
             },
-            body => thoas:encode(AnimalObject)
+            body => AnimalObject
         }
     }),
     ?assertMatch({ok, AnimalObject}, animal_service_interface:get_animal(Port, "Mary")),
@@ -88,14 +88,14 @@ get_animal_failure(Config) ->
         upon_receiving => <<"a request to GET a non-existing animal: Miles">>,
         with_request => #{
             method => <<"GET">>,
-            path => <<"/animals/Miles">>
+            path => pact:regex_match(<<"/animals/Miles">>, <<"^\/animals\/[a-zA-Z]+">>)
         },
         will_respond_with => #{
             status => 404,
             headers => #{
                 <<"Content-Type">> => <<"application/json">>
             },
-            body => thoas:encode(#{error => not_found})
+            body => #{error => not_found}
         }
     }),
     ?assertMatch({error, not_found}, animal_service_interface:get_animal(Port, "Miles")),
@@ -104,7 +104,34 @@ get_animal_failure(Config) ->
 
 create_animal(Config) ->
     PactRef = ?config(pact_ref, Config),
-    AnimalObject = #{<<"name">> => <<"Max">>, <<"type">> => <<"dog">>},
+    AnimalPactObject = pact:like(#{
+        <<"name">> => <<"Max">>,
+        <<"type">> => <<"dog">>,
+        <<"age">> => 3,
+        <<"nickname">> => <<"koko">>,
+        <<"weight_kg">> => 12.0,
+        <<"gender">> => pact:regex_match(<<"male">>, <<"(male|female)">>),
+        <<"carnivorous">> => true,
+        <<"siblings">> => pact:each_like(<<"lola">>),
+        <<"list_att">> => pact:each_like([1,pact:like(<<"head">>)]),
+        <<"children">> => [<<"coco">>],
+        <<"children_details">> => pact:each_like(#{<<"name">> => <<"coco">>, <<"age">> => 1, <<"body_size">> => [3,4,5]}),
+        <<"attributes">> => pact:each_key(#{<<"happy">> => true}, <<"(happy|ferocious)">>)
+    }),
+    AnimalObject = [
+        {<<"name">>, <<"Max">>},
+        {<<"type">>, <<"dog">>},
+        {<<"age">>, 3},
+        {<<"nickname">>, <<"lazgo">>},
+        {<<"weight_kg">>, 10.0},
+        {<<"gender">>, <<"male">>},
+        {<<"carnivorous">>, true},
+        {<<"siblings">>, [<<"lola">>, <<"mary">>]},
+        {<<"list_att">>, [[2, <<"legs">>]]},
+        {<<"children">>,  [<<"coco">>]},
+        {<<"children_details">>, [[{<<"name">>, <<"coco">>}, {<<"age">>, 1}, {<<"body_size">>, [3,4,5]}]]},
+        {<<"attributes">>, [{<<"ferocious">>, false}]}
+    ],
     {ok, Port} = pact:interaction(PactRef,
     #{
         upon_receiving => <<"a request to create an animal: Max">>,
@@ -114,7 +141,7 @@ create_animal(Config) ->
             headers => #{
                 <<"Content-Type">> => <<"application/json">>
             },
-            body => thoas:encode(AnimalObject)
+            body => AnimalPactObject
         },
         will_respond_with => #{
             status => 201
@@ -144,7 +171,7 @@ search_animals(Config) ->
             headers => #{
                 <<"Content-Type">> => <<"application/json">>
             },
-            body => thoas:encode(Result)
+            body => Result
         }
     }),
     ?assertMatch({ok, Result}, animal_service_interface:search_animals(Port, Query)),

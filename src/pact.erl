@@ -6,7 +6,11 @@
     verify/1,
     write/1,
     write/2,
-    cleanup/1
+    cleanup/1,
+    like/1,
+    each_like/1,
+    regex_match/2,
+    each_key/2
 ]).
 
 -type consumer() :: binary().
@@ -47,3 +51,25 @@ write(PactPid, Path) ->
 -spec cleanup(pact_pid()) -> ok.
 cleanup(PactPid) ->
     pact_consumer:cleanup(PactPid).
+
+%% @doc Matches all the child objects (and their child objects etc.)
+%% Matched according to their types
+-spec like(any()) -> map().
+like(Term) ->
+    pact_matchers:like(Term).
+
+%% @doc Asserts the Term is an array type that consists of elements
+%% Like the one passed in
+-spec each_like(any()) -> map().
+each_like(Term) ->
+    pact_matchers:each_like(Term).
+
+%% @doc Asserts the value should match the given regular expression
+-spec regex_match(binary() | boolean() | number(), binary()) -> map().
+regex_match(Value, Regex) ->
+    pact_matchers:regex_match(Value, Regex).
+
+%% @doc Asserts that each key of Value should match the given regular expression
+-spec each_key(binary() | boolean() | number(), binary()) -> map().
+each_key(Value, Regex) ->
+    pact_matchers:each_key(Value, Regex).
