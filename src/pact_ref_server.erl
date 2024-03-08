@@ -99,11 +99,5 @@ handle_call({set_pact_ref, PactRef}, _From, State) ->
 handle_call(get_consumer_producer, _From, State) ->
     {reply, {State#pact_state.consumer, State#pact_state.producer}, State}.
 
-handle_cast(_Msg, State) ->
-    {noreply, State}.
-
-handle_info(_Info, State) ->
-    {noreply, State}.
-
 terminate(_Reason, _State) ->
     ok.
