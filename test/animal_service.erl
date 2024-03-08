@@ -122,10 +122,5 @@ make_json_response(Code, Body) ->
     Length = io_lib:format("~w", [io_lib:chars_length(BodyJson)]),
     {proceed, [{response, {response, [{code, Code}, {content_length, Length}, {content_type, "application/json"}], BodyJson}}]}.
 
-make_json_response(Code, Body, ExtraHeaders) ->
-    BodyJson = erlang:binary_to_list(thoas:encode(Body)),
-    Length = io_lib:format("~w", [io_lib:chars_length(BodyJson)]),
-    {proceed, [{response, {response, ExtraHeaders ++ [{code, Code}, {content_length, Length}, {content_type, "application/json"}], BodyJson}}]}.
-
 make_404_response() ->
-    make_json_response(404, #{error => not_found}, [{error_details, "not found"}]).
+    make_json_response(404, #{error => not_found}).
