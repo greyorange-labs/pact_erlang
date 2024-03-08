@@ -93,7 +93,8 @@ get_animal_failure(Config) ->
         will_respond_with => #{
             status => 404,
             headers => #{
-                <<"Content-Type">> => pact:like(<<"application/json">>)
+                <<"error_details">> =>  pact:like(<<"animal not found">>),
+                <<"Content-Type">> => <<"application/json">>
             },
             body => #{error => not_found}
         }
