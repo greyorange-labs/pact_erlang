@@ -11,7 +11,7 @@
     set_pact_ref/2,
     get_consumer_producer/1
 ]).
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
+-export([init/1, handle_call/3, terminate/2]).
 
 -type pact_ref() :: integer().
 -type pact_interaction_ref() :: integer().
