@@ -54,7 +54,7 @@ PactRef = pact:v4(<<"consumer">>, <<"producer">>).
             headers => #{
                 <<"Content-Type">> => <<"application/json">>
             },
-            body => thoas:encode(#{users => [#{user_id => 1, user_name => <<"ranjan">>, age => 26}]})
+            body => #{users => [#{user_id => 1, user_name => <<"ranjan">>, age => 26}]}
         }
     }).
 
