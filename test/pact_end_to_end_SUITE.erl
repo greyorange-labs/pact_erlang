@@ -138,6 +138,7 @@ create_animal(Config) ->
         {<<"gender">>, <<"male">>},
         {<<"carnivorous">>, true},
         {<<"siblings">>, [<<"lola">>, <<"mary">>]},
+        {<<"list_att">>, [[2, <<"legs">>]]},
         {<<"children">>,  [<<"coco">>]},
         {<<"children_details">>, [[{<<"name">>, <<"coco">>}, {<<"age">>, 1}, {<<"body_size">>, [3,4,5]}]]},
         {<<"attributes">>, [{<<"ferocious">>, false}]}
