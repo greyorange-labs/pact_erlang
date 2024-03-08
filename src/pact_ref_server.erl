@@ -11,7 +11,9 @@
     set_pact_ref/2,
     get_consumer_producer/1
 ]).
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
+-export([init/1, handle_call/3, terminate/2]).
+
+-dialyzer(no_behaviours).
 
 -type pact_ref() :: integer().
 -type pact_interaction_ref() :: integer().
@@ -98,12 +100,6 @@ handle_call({set_pact_ref, PactRef}, _From, State) ->
     {reply, ok, NewState};
 handle_call(get_consumer_producer, _From, State) ->
     {reply, {State#pact_state.consumer, State#pact_state.producer}, State}.
-
-handle_cast(_Msg, State) ->
-    {noreply, State}.
-
-handle_info(_Info, State) ->
-    {noreply, State}.
 
 terminate(_Reason, _State) ->
     ok.
