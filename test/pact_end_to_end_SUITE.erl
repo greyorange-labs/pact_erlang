@@ -138,6 +138,8 @@ create_animal(Config) ->
         {<<"gender">>, <<"male">>},
         {<<"carnivorous">>, true},
         {<<"siblings">>, [<<"lola">>, <<"mary">>]},
+        {<<"children">>,  [<<"coco">>]},
+        {<<"children_details">>, [{<<"name">>, <<"coco">>}, {<<"age">>, 1}, {<<"body_size">>, [3,4,5]}]},
         {<<"attributes">>, [{<<"ferocious">>, false}]}
     ],
     {ok, Port} = pact:interaction(PactRef,
