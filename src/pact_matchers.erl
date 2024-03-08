@@ -44,26 +44,28 @@ each_like(Term) when (is_number(Term) orelse is_binary(Term) orelse is_boolean(T
         <<"pact:matcher:type">> => <<"type">>
     };
 each_like(Term) when (is_list(Term)) ->
-    lists:foldr(
-        fun(Elem, Acc) ->
-            [?MODULE:each_like(Elem) | Acc]
-        end,
-        [],
-        Term
-    );
+    #{
+        <<"value">> => Term,
+        <<"pact:matcher:type">> => <<"type">>
+    };
 each_like(Term) when (is_map(Term)) ->
     Keys = maps:keys(Term),
-    case lists:member(<<"pact:matcher:type">>, Keys) of
-        true ->
-            Term;
-        false ->
-            maps:map(
-                fun(_Key, InitValue) ->
-                    ?MODULE:each_like(InitValue)
-                end,
-                Term
-            )
-    end.
+    Map =
+        case lists:member(<<"pact:matcher:type">>, Keys) of
+            true ->
+                Term;
+            false ->
+                maps:map(
+                    fun(_Key, InitValue) ->
+                        ?MODULE:like(InitValue)
+                    end,
+                    Term
+                )
+        end,
+    #{
+        <<"value">> => [Map],
+        <<"pact:matcher:type">> => <<"type">>
+    }.
 
 %% @doc Function for matching with regex
 -spec regex_match(binary() | boolean() | number() | map() | list(), binary()) -> map().

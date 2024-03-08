@@ -88,12 +88,12 @@ get_animal_failure(Config) ->
         upon_receiving => <<"a request to GET a non-existing animal: Miles">>,
         with_request => #{
             method => <<"GET">>,
-            path => <<"/animals/Miles">>
+            path => pact:regex_match(<<"/animals/Miles">>, <<"^\/animals\/[a-zA-Z]+">>)
         },
         will_respond_with => #{
             status => 404,
             headers => #{
-                <<"Content-Type">> => <<"application/json">>
+                <<"Content-Type">> => pact:like(<<"application/json">>)
             },
             body => #{error => not_found}
         }
@@ -107,13 +107,15 @@ create_animal(Config) ->
     AnimalPactObject = pact:like(#{
         <<"name">> => <<"Max">>,
         <<"type">> => <<"dog">>,
-        <<"age">> => 1,
+        <<"age">> => 3,
         <<"nickname">> => <<"koko">>,
         <<"weight_kg">> => 12.0,
-        <<"gender">> => pact_matchers:regex_match(<<"male">>, <<"(male|female)">>),
+        <<"gender">> => pact:regex_match(<<"male">>, <<"(male|female)">>),
         <<"carnivorous">> => true,
-        <<"siblings">> => pact_matchers:each_like(<<"lola">>),
-        <<"attributes">> => pact_matchers:each_key(#{<<"happy">> => true}, <<"(happy|ferocious)">>)
+        <<"siblings">> => pact:each_like(<<"lola">>),
+        <<"children">> => [<<"coco">>],
+        <<"children_details">> => pact:each_like(#{<<"name">> => <<"coco">>, <<"age">> => 1, <<"body_size">> => [3,4,5]}),
+        <<"attributes">> => pact:each_key(#{<<"happy">> => true}, <<"(happy|ferocious)">>)
     }),
     % AnimalPactObject = #{
     %     <<"name">> => <<"Max">>,
