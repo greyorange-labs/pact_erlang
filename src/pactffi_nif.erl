@@ -26,7 +26,8 @@
     cleanup_mock_server/1,
     free_pact_handle/1,
     with_query_parameter_v2/4,
-    given/2
+    given/2,
+    given_with_params/3
 ]).
 
 % Import the NIF functions from the C library
@@ -50,7 +51,8 @@
     cleanup_mock_server/1,
     free_pact_handle/1,
     with_query_parameter_v2/4,
-    given/2
+    given/2,
+    given_with_params/3
 ]).
 -on_load(init/0).
 
@@ -131,4 +133,7 @@ with_query_parameter_v2(_, _, _, _) ->
     erlang:nif_error("NIF library not loaded").
 
 given(_, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+given_with_params(_, _, _) ->
     erlang:nif_error("NIF library not loaded").

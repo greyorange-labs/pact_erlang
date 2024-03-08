@@ -41,7 +41,9 @@ PactRef = pact:v4(<<"consumer">>, <<"producer">>).
 %% Define the interaction, returns running mock server port
 {ok, Port} = pact:interaction(PactRef,
     #{
-        given => <<"a user ranjan exists">>
+        given => #{
+            state => <<"a user ranjan exists">>
+        },
         upon_receiving => <<"get all users">>,
         with_request => #{
             method => <<"GET">>,

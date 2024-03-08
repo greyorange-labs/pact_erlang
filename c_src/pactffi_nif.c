@@ -144,6 +144,34 @@ static ERL_NIF_TERM given(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     }
 }
 
+static ERL_NIF_TERM given_with_params(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    int interaction_ref = convert_erl_int_to_c_int(env, argv[0]);
+    if (!enif_is_binary(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *provider_state = convert_erl_binary_to_c_string(env, argv[1]);
+    if (!enif_is_binary(env, argv[2]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *params = convert_erl_binary_to_c_string(env, argv[2]);
+    InteractionHandle interactionhandle = interaction_ref;
+    if(pactffi_given_with_params(interactionhandle, provider_state, params))
+    {
+        return enif_make_tuple2(env, enif_make_atom(env, "ok"), enif_make_atom(env, "provider_state_added"));
+    }
+    else
+    {
+        return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_atom(env, "cannot_add_provider_state"));
+    }
+}
+
 static ERL_NIF_TERM with_request(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     if (!enif_is_number(env, argv[0]))
@@ -467,7 +495,8 @@ static ErlNifFunc nif_funcs[] =
         {"cleanup_mock_server", 1, cleanup_mock_server},
         {"free_pact_handle", 1, free_pact_handle},
         {"with_query_parameter_v2", 4, with_query_parameter_v2},
-        {"given", 2, given}
+        {"given", 2, given},
+        {"given_with_params", 3, given_with_params}
     };
 
 ERL_NIF_INIT(pactffi_nif, nif_funcs, NULL, NULL, NULL, NULL)

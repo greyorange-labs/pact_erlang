@@ -9,7 +9,7 @@ all() -> [{group, consumer}, {group, producer}].
 
 groups() ->
     [
-        {consumer, [get_animal_success, get_animal_failure, create_animal, search_animals]},
+        {consumer, [get_animal_success, get_animal_success_2, get_animal_failure, create_animal, search_animals]},
         {producer, [verify_producer]}
     ].
 
@@ -37,7 +37,10 @@ get_animal_success(Config) ->
     AnimalObject = #{<<"name">> => <<"Mary">>, <<"type">> => <<"alligator">>},
     {ok, Port} = pact:interaction(PactRef,
     #{
-        given => <<"an alligator with the name Mary exists">>,
+        given => #{
+            state => <<"an alligator with the name Mary exists">>,
+            params => thoas:encode(AnimalObject)
+        },
         upon_receiving => <<"a request to GET an animal: Mary">>,
         with_request => #{
             method => <<"GET">>,
@@ -52,6 +55,29 @@ get_animal_success(Config) ->
         }
     }),
     ?assertMatch({ok, AnimalObject}, animal_service_interface:get_animal(Port, "Mary")),
+    {ok, matched} = pact:verify(PactRef),
+    pact:write(PactRef).
+
+get_animal_success_2(Config) ->
+    PactRef = ?config(pact_ref, Config),
+    AnimalObject = #{<<"name">> => <<"Duke">>, <<"type">> => <<"Dog">>},
+    {ok, Port} = pact:interaction(PactRef,
+    #{
+        given => <<"a dog with the name Duke exists">>,
+        upon_receiving => <<"a request to GET an animal: Duke">>,
+        with_request => #{
+            method => <<"GET">>,
+            path => <<"/animals/Duke">>
+        },
+        will_respond_with => #{
+            status => 200,
+            headers => #{
+                <<"Content-Type">> => <<"application/json">>
+            },
+            body => thoas:encode(AnimalObject)
+        }
+    }),
+    ?assertMatch({ok, AnimalObject}, animal_service_interface:get_animal(Port, "Duke")),
     {ok, matched} = pact:verify(PactRef),
     pact:write(PactRef).
 
@@ -100,11 +126,14 @@ create_animal(Config) ->
 
 search_animals(Config) ->
     PactRef = ?config(pact_ref, Config),
+    AnimalObj = #{<<"name">> => <<"Mary">>, <<"type">> => <<"alligator">>},
     Result = #{<<"animals">> => [#{<<"name">> => <<"Mary">>, <<"type">> => <<"alligator">>}]},
     Query = #{<<"type">> => <<"alligator">>},
     {ok, Port} = pact:interaction(PactRef,
     #{
-        given => <<"an alligator with the name Mary exists">>,
+        given => #{
+            state => <<"an alligator with the name Mary exists">>
+        },
         upon_receiving => <<"a request to find all alligators">>,
         with_request => #{
             method => <<"GET">>,
