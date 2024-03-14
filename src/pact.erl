@@ -10,7 +10,8 @@
     like/1,
     each_like/1,
     regex_match/2,
-    each_key/2
+    each_key/2,
+    msg_interaction/2
 ]).
 
 -type consumer() :: binary().
@@ -18,6 +19,7 @@
 -type pact_pid() :: pid().
 -type pact_interaction_details() :: map().
 -type pact_mock_server_port() :: integer().
+-type pact_message_data() :: map().
 
 %% @doc Starts a new pact server and returns its pid
 %% Returns old instance's pid in case cleanup was not done correctly
@@ -31,6 +33,13 @@ v4(Consumer, Provider) ->
     {ok, pact_mock_server_port()}.
 interaction(PactPid, Interaction) ->
     pact_consumer:interaction(PactPid, Interaction).
+
+%% @doc Creates a test message with the given interaction details
+%% Returns message data for running message consumer tests
+-spec interaction(pact_pid(), pact_interaction_details()) ->
+    {ok, pact_message_data()}.
+msg_interaction(PactPid, Interaction) ->
+    pact_consumer:msg_interaction(PactPid, Interaction).
 
 %% @doc Verifies Writes pact file and also finally cleanups
 -spec verify(pact_pid()) -> {ok, matched} | {error, not_matched}.

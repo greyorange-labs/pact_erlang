@@ -121,6 +121,24 @@ static ERL_NIF_TERM new_interaction(ErlNifEnv *env, int argc, const ERL_NIF_TERM
     return enif_make_int(env, interactionhandle);
 }
 
+static ERL_NIF_TERM new_msg_interaction(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    int pact_ref = convert_erl_int_to_c_int(env, argv[0]);
+    if (!enif_is_binary(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *interaction_desc = convert_erl_binary_to_c_string(env, argv[1]);
+    PactHandle pacthandle = pact_ref;
+    InteractionHandle interactionhandle = pactffi_new_message_interaction(pacthandle, interaction_desc);
+
+    return enif_make_int(env, interactionhandle);
+}
+
 static ERL_NIF_TERM given(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     if (!enif_is_number(env, argv[0]))
@@ -142,6 +160,24 @@ static ERL_NIF_TERM given(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     {
         return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_atom(env, "cannot_add_provider_state"));
     }
+}
+
+static ERL_NIF_TERM msg_given(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    int interaction_ref = convert_erl_int_to_c_int(env, argv[0]);
+    if (!enif_is_binary(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *provider_state = convert_erl_binary_to_c_string(env, argv[1]);
+    MessageHandle interactionhandle = interaction_ref;
+    pactffi_message_given(interactionhandle, provider_state)
+    
+    return enif_make_atom(env, "ok"); 
 }
 
 static ERL_NIF_TERM given_with_params(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
@@ -170,6 +206,29 @@ static ERL_NIF_TERM given_with_params(ErlNifEnv *env, int argc, const ERL_NIF_TE
     {
         return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_atom(env, "cannot_add_provider_state"));
     }
+}
+
+static ERL_NIF_TERM msg_given_with_params(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    int interaction_ref = convert_erl_int_to_c_int(env, argv[0]);
+    if (!enif_is_binary(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *provider_state = convert_erl_binary_to_c_string(env, argv[1]);
+    if (!enif_is_binary(env, argv[2]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *params = convert_erl_binary_to_c_string(env, argv[2]);
+    MessageHandle interactionhandle = interaction_ref;
+    pactffi_message_given_with_param(interactionhandle, provider_state, params)
+    
+    return enif_make_atom(env, "ok");
 }
 
 static ERL_NIF_TERM with_request(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
@@ -277,6 +336,52 @@ static ERL_NIF_TERM with_body(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[
     else
     {
         return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_atom(env, "cannot_add_body"));
+    }
+}
+
+static ERL_NIF_TERM msg_with_contents(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    int interaction_ref = convert_erl_int_to_c_int(env, argv[0]);
+    MessageHandle interactH = interaction_ref;
+
+    if (!enif_is_binary(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+    if (!enif_is_binary(env, argv[2]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *content_type = convert_erl_binary_to_c_string(env, argv[2]);
+    char *body_json_string = convert_erl_binary_to_c_string(env, argv[3]);
+
+    pactffi_message_with_contents(interactH, content_type, body_json_string, NULL)
+    
+    return enif_make_atom(env, "ok");
+}
+
+static ERL_NIF_TERM reify_message(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    int interaction_ref = convert_erl_int_to_c_int(env, argv[0]);
+    MessageHandle interactH = interaction_ref;
+
+    char *reified_message = pactffi_message_reify(interactH);
+
+    if (reified_message != NULL)
+    {
+        return enif_make_tuple2(env, enif_make_atom(env, "ok"), enif_make_string(env, reified_message, ERL_NIF_LATIN1));
+    }
+    else
+    {
+        return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_atom(env, "cannot_reify_message"));
     }
 }
 
@@ -474,6 +579,260 @@ static ERL_NIF_TERM with_query_parameter_v2(ErlNifEnv *env, int argc, const ERL_
     }
 }
 
+// Provider verifier functions
+
+static ERL_NIF_TERM new_verifier(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_binary(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    if (!enif_is_binary(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *name = convert_erl_binary_to_c_string(env, argv[0]);
+    char *version = convert_erl_binary_to_c_string(env, argv[1]);
+    VerifierHandle verifierhandle;
+    verifierhandle = pactffi_verifier_new_for_application(name, version);
+
+    return enif_make_int(env, verifierhandle);
+}
+
+static ERL_NIF_TERM verifier_set_provider_info(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    int verifier_ref = convert_erl_int_to_c_int(env, argv[0]);
+    VerifierHandle verifierhandle = verifier_ref;
+    if (!enif_is_binary(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *name = convert_erl_binary_to_c_string(env, argv[1]);
+    if (!enif_is_binary(env, argv[2]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *scheme = convert_erl_binary_to_c_string(env, argv[2]);
+    if (!enif_is_binary(env, argv[3]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *host = convert_erl_binary_to_c_string(env, argv[3]);
+    if (!enif_is_number(env, argv[4]))
+    {
+        return enif_make_badarg(env);
+    }
+    int port = convert_erl_int_to_c_int(env, argv[4]);
+    if (!enif_is_number(env, argv[5]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *path = convert_erl_binary_to_c_string(env, argv[5]);
+
+    pactffi_verifier_set_provider_info(verifierhandle, name, scheme, host, port, path)
+
+    return enif_make_atom(env, "ok");
+}
+
+static ERL_NIF_TERM verifier_add_provider_transport(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    int verifier_ref = convert_erl_int_to_c_int(env, argv[0]);
+    VerifierHandle verifierhandle = verifier_ref;
+    if (!enif_is_binary(env, argv[4]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *scheme = convert_erl_binary_to_c_string(env, argv[4]);
+    if (!enif_is_binary(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *protocol = convert_erl_binary_to_c_string(env, argv[1]);
+    if (!enif_is_number(env, argv[3]))
+    {
+        return enif_make_badarg(env);
+    }
+    int port = convert_erl_int_to_c_int(env, argv[3]);
+    if (!enif_is_number(env, argv[2]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *path = convert_erl_binary_to_c_string(env, argv[2]);
+
+    pactffi_verifier_add_provider_transport(verifierhandle, protocol, port, path, scheme)
+
+    return enif_make_atom(env, "ok");
+}
+
+static ERL_NIF_TERM verifier_set_provider_state(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    int verifier_ref = convert_erl_int_to_c_int(env, argv[0]);
+    VerifierHandle verifierhandle = verifier_ref;
+    if (!enif_is_binary(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *url = convert_erl_binary_to_c_string(env, argv[1]);
+    if (!enif_is_number(env, argv[2]))
+    {
+        return enif_make_badarg(env);
+    }
+    int teardown = convert_erl_int_to_c_int(env, argv[2]);
+    if (!enif_is_number(env, argv[3]))
+    {
+        return enif_make_badarg(env);
+    }
+    int body = convert_erl_int_to_c_int(env, argv[3]);
+
+    pactffi_verifier_set_provider_state(verifierhandle, url, teardown, body)
+    return enif_make_atom(env, "ok");
+}
+
+static ERL_NIF_TERM verifier_set_publish_options(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    int verifier_ref = convert_erl_int_to_c_int(env, argv[0]);
+    VerifierHandle verifierhandle = verifier_ref;
+    if (!enif_is_binary(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *providerversion = convert_erl_binary_to_c_string(env, argv[1]);
+    if (!enif_is_binary(env, argv[2]))
+    {
+        return enif_make_badarg(env);
+    }
+    char* providerbranch = convert_erl_binary_to_c_string(env, argv[2]);
+
+    if (pactffi_verifier_set_publish_options(verifierhandle, providerversion, NULL, NULL, NULL, providerbranch))
+    {
+        return enif_make_tuple2(env, enif_make_atom(env, "ok"), enif_make_atom(env, "publish_options_set_successfully"));
+    }
+    else
+    {
+        return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_atom(env, "cannot_set_publish_options"));
+    }
+}
+
+static ERL_NIF_TERM verifier_add_file_source(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    int verifier_ref = convert_erl_int_to_c_int(env, argv[0]);
+    VerifierHandle verifierhandle = verifier_ref;
+    if (!enif_is_binary(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *file = convert_erl_binary_to_c_string(env, argv[1]);
+
+    pactffi_verifier_add_file_source(verifierhandle, file)
+
+    return enif_make_atom(env, "ok");
+}
+
+static ERL_NIF_TERM verifier_add_broker(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    int verifier_ref = convert_erl_int_to_c_int(env, argv[0]);
+    VerifierHandle verifierhandle = verifier_ref;
+    if (!enif_is_binary(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *url = convert_erl_binary_to_c_string(env, argv[1]);
+
+    if (!enif_is_binary(env, argv[2]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *username = convert_erl_binary_to_c_string(env, argv[2]);
+
+    if (!enif_is_binary(env, argv[3]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *password = convert_erl_binary_to_c_string(env, argv[3]);
+
+    // TODO: give token option
+
+    if (!enif_is_number(env, argv[4]))
+    {
+        return enif_make_badarg(env);
+    }
+    int enable_pending_pacts = convert_erl_int_to_c_int(env, argv[4]);
+
+    if (!enif_is_binary(env, argv[5]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *providerbranch = convert_erl_binary_to_c_string(env, argv[5]);
+
+
+    if (!enif_is_binary(env, argv[6]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *consumer_version_selectors = convert_erl_binary_to_c_string(env, argv[6]);
+
+    if (!enif_is_number(env, argv[7]))
+    {
+        return enif_make_badarg(env);
+    }
+    int *consumer_version_selectors_len = convert_erl_int_to_c_int(env, argv[7]);
+
+
+    pactffi_verifier_broker_source_with_selectors(verifierhandle, url, username, password, NULL, enable_pending_pacts, NULL, NULL, NULL, providerbranch, consumer_version_selectors, consumer_version_selectors_len, NULL, NULL)
+    return enif_make_atom(env, "ok");
+}
+
+
+static ERL_NIF_TERM verifier_execute(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    int verifier_ref = convert_erl_int_to_c_int(env, argv[0]);
+    VerifierHandle verifierhandle = verifier_ref;
+    int output = pactffi_verifier_execute(verifierhandle);
+
+    return enif_make_int(env, output);
+}
+
+static ERL_NIF_TERM verifier_shutdown(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    int verifier_ref = convert_erl_int_to_c_int(env, argv[0]);
+    VerifierHandle verifierhandle = verifier_ref;
+    pactffi_verifier_shutdown(verifierhandle);
+
+    return enif_make_atom(env, "ok");
+}
+
 static ErlNifFunc nif_funcs[] =
     {
         {"version", 0, version},
@@ -496,7 +855,21 @@ static ErlNifFunc nif_funcs[] =
         {"free_pact_handle", 1, free_pact_handle},
         {"with_query_parameter_v2", 4, with_query_parameter_v2},
         {"given", 2, given},
-        {"given_with_params", 3, given_with_params}
+        {"given_with_params", 3, given_with_params},
+        {"new_msg_interaction", 2, new_msg_interaction},
+        {"msg_given", 2, msg_given},
+        {"msg_given_with_params", 3, msg_given_with_params},
+        {"msg_with_contents", 3, msg_with_contents},
+        {"reify_message", 1, reify_message},
+        {"new_verifier", 2, new_verifier},
+        {"verifier_set_provider_info", 6, verifier_set_provider_info},
+        {"verifier_add_provider_transport", 5, verifier_add_provider_transport},
+        {"verifier_set_provider_state", 4, verifier_set_provider_state},
+        {"verifier_set_publish_options", 3, verifier_set_publish_options},
+        {"verifier_add_file_source", 2, verifier_add_file_source},
+        {"verifier_add_broker", 8, verifier_add_broker},
+        {"verifier_execute", 1, verifier_execute},
+        {"verifier_shutdown", 1, verifier_shutdown}
     };
 
 ERL_NIF_INIT(pactffi_nif, nif_funcs, NULL, NULL, NULL, NULL)

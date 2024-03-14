@@ -27,7 +27,22 @@
     free_pact_handle/1,
     with_query_parameter_v2/4,
     given/2,
-    given_with_params/3
+    given_with_params/3,
+    new_msg_interaction/2,
+    msg_given/2,
+    msg_given_with_params/3,
+    msg_with_contents/3,
+    reify_message/1,
+    get_reified_message/1,
+    new_verifier/2,
+    verifier_set_provider_info/6,
+    verifier_add_provider_transport/5,
+    verifier_set_provider_state/4,
+    verifier_set_publish_options/3,
+    verifier_add_file_source/2,
+    verifier_add_broker/8,
+    verifier_execute/1,
+    verifier_shutdown/1
 ]).
 
 % Import the NIF functions from the C library
@@ -52,7 +67,21 @@
     free_pact_handle/1,
     with_query_parameter_v2/4,
     given/2,
-    given_with_params/3
+    given_with_params/3,
+    new_msg_interaction/2,
+    msg_given/2,
+    msg_given_with_params/3,
+    msg_with_contents/3,
+    reify_message/1,
+    new_verifier/2,
+    verifier_set_provider_info/6,
+    verifier_add_provider_transport/5,
+    verifier_set_provider_state/4,
+    verifier_set_publish_options/3,
+    verifier_add_file_source/2,
+    verifier_add_broker/8,
+    verifier_execute/1,
+    verifier_shutdown/1
 ]).
 -on_load(init/0).
 
@@ -66,6 +95,18 @@ get_mismatches(MockServerPort) ->
         Json ->
             {ok, Mismatches} = thoas:decode(Json),
             Mismatches
+    end.
+
+%% Non-NIF functions (mostly just wrappers around NIF functions)
+%% @doc Returns reified message contents
+-spec get_reified_message(integer()) -> [] | thoas:json_term().
+get_reified_message(InteractionHandle) ->
+    case pactffi_nif:reify_message(InteractionHandle) of
+        {error, _} ->
+            [];
+        {ok, Json} ->
+            {ok, ReifiedMessage} = thoas:decode(Json),
+            ReifiedMessage
     end.
 
 % Load the NIF library
@@ -136,4 +177,46 @@ given(_, _) ->
     erlang:nif_error("NIF library not loaded").
 
 given_with_params(_, _, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+new_msg_interaction(_, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+msg_given(_, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+msg_given_with_params(_, _, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+msg_with_contents(_, _, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+reify_message(_) ->
+    erlang:nif_error("NIF library not loaded").
+
+new_verifier(_, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+verifier_set_provider_info(_, _, _, _, _, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+verifier_add_provider_transport(_, _, _, _, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+verifier_set_provider_state(_, _, _, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+verifier_set_publish_options(_, _, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+verifier_add_file_source(_, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+verifier_add_broker(_, _, _, _, _, _, _, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+verifier_execute(_) ->
+    erlang:nif_error("NIF library not loaded").
+
+verifier_shutdown(_) ->
     erlang:nif_error("NIF library not loaded").

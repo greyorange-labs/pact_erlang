@@ -5,7 +5,8 @@
     start/0,
     start/1,
     stop/0,
-    do/1
+    do/1,
+    process_weather_data/1
 ]).
 
 -define(TABLE_NAME, animals).
@@ -124,3 +125,16 @@ make_json_response(Code, Body) ->
 
 make_404_response() ->
     make_json_response(404, #{error => not_found}).
+
+process_weather_data(Payload) ->
+    #{
+        weather := #{
+            temperature := Temp,
+            humidity := Humidity,
+            wind_speed_kmh := WindSpeed
+        },
+        timestamp := TimeStamp
+    } = Payload
+    %% Do something with weather data like validation,
+    %% Db update
+    ok.
