@@ -55,7 +55,13 @@ init_interaction(PactPid, Interaction) ->
                 undefined ->
                     pactffi_nif:msg_given(InteractionRef, ProviderState);
                 _ ->
-                    pactffi_nif:msg_given_with_params(InteractionRef, ProviderState, StateJson)
+                    DecodedStateJson = pact_consumer:decode_value(StateJson),
+                    maps:foreach(
+                        fun(Key, Value) ->
+                            pactffi_nif:msg_given_with_param(InteractionRef, ProviderState, Key, Value)
+                        end,
+                        DecodedStateJson
+                    )
             end
     end,
     ok = pact_ref_server:create_interaction(PactPid, InteractionRef, Interaction),
@@ -63,23 +69,13 @@ init_interaction(PactPid, Interaction) ->
 
 -spec insert_contents(pact_interaction_ref(), message()) -> ok.
 insert_contents(InteractionRef, Message) ->
-    %% Checking if someone used regex_match
-    CheckIfMap =
-        fun(Value) ->
-            case is_map(Value) of
-                true ->
-                    thoas:encode(Value);
-                false ->
-                    Value
-            end
-        end,
     ResHeaders = maps:get(headers, ResponseDetails, #{}),
     ContentType = get_content_type(ResHeaders),
     case Message of
         undefined ->
             ok;
         _ ->
-            NewMessage = CheckIfMap(Message),
+            NewMessage = pact_consumer:encode_value(Message),
             pactffi_nif:msg_with_contents(InteractionRef, ContentType, NewMessage)
     end,
     ok.

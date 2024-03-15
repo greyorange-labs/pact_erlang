@@ -60,7 +60,8 @@ init_interaction(PactPid, Interaction) ->
                 undefined ->
                     pactffi_nif:given(InteractionRef, ProviderState);
                 _ ->
-                    pactffi_nif:given_with_params(InteractionRef, ProviderState, StateJson)
+                    NewStateJson = pact_consumer:encode_value(StateJson)
+                    pactffi_nif:given_with_params(InteractionRef, ProviderState, NewStateJson)
             end
     end,
     ok = pact_ref_server:create_interaction(PactPid, InteractionRef, Interaction),
@@ -79,16 +80,6 @@ start_mock_server(PactPid, PactRef, Host, Port, InteractionPart) ->
 
 -spec insert_request_details(pact_interaction_ref(), request_details()) -> ok.
 insert_request_details(InteractionRef, RequestDetails) ->
-    %% Checking if someone used regex_match
-    CheckIfMap =
-        fun(Value) ->
-            case is_map(Value) of
-                true ->
-                    thoas:encode(Value);
-                false ->
-                    Value
-            end
-        end,
     ReqMethod = maps:get(method, RequestDetails),
     ReqPath = maps:get(path, RequestDetails),
     NewReqPath = CheckIfMap(ReqPath),
@@ -98,7 +89,7 @@ insert_request_details(InteractionRef, RequestDetails) ->
     maps:fold(
         fun(Key, Value, _Acc) ->
             %% FIXME: 4th parameter is Index.. need to increment
-            NewValue = CheckIfMap(Value),
+            NewValue = pact_consumer:encode_value(Value),
             pactffi_nif:with_header_v2(InteractionRef, 0, Key, 0, NewValue)
         end,
         ok,
@@ -109,7 +100,7 @@ insert_request_details(InteractionRef, RequestDetails) ->
         undefined ->
             ok;
         _ ->
-            NewReqBody = CheckIfMap(ReqBody),
+            NewReqBody = pact_consumer:encode_value(ReqBody),
             pactffi_nif:with_body(InteractionRef, 0, ContentType, NewReqBody)
     end,
     ReqQueryParams = maps:get(query_params, RequestDetails, undefined),
@@ -120,7 +111,7 @@ insert_request_details(InteractionRef, RequestDetails) ->
             maps:fold(
                 fun(Key, Value, _Acc) ->
                     %% FIXME: 3rd parameter is Index.. need to increment
-                    NewValue = CheckIfMap(Value),
+                    NewValue = pact_consumer:encode_value(Value),
                     pactffi_nif:with_query_parameter_v2(InteractionRef, Key, 0, NewValue)
                 end,
                 ok,
@@ -131,16 +122,6 @@ insert_request_details(InteractionRef, RequestDetails) ->
 
 -spec insert_response_details(pact_interaction_ref(), response_details()) -> ok.
 insert_response_details(InteractionRef, ResponseDetails) ->
-    %% Checking if someone used regex_match
-    CheckIfMap =
-        fun(Value) ->
-            case is_map(Value) of
-                true ->
-                    thoas:encode(Value);
-                false ->
-                    Value
-            end
-        end,
     ResponseStatusCode = maps:get(status, ResponseDetails, undefined),
     case ResponseStatusCode of
         undefined -> ok;
@@ -151,7 +132,7 @@ insert_response_details(InteractionRef, ResponseDetails) ->
     maps:fold(
         fun(Key, Value, _Acc) ->
             %% FIXME: 4th parameter is Index.. need to increment
-            NewValue = CheckIfMap(Value),
+            NewValue = pact_consumer:encode_value(Value),
             pactffi_nif:with_header_v2(InteractionRef, 1, Key, 0, NewValue)
         end,
         ok,
@@ -162,7 +143,7 @@ insert_response_details(InteractionRef, ResponseDetails) ->
         undefined ->
             ok;
         _ ->
-            NewResBody = CheckIfMap(ResBody),
+            NewResBody = pact_consumer:encode_value(ResBody),
             pactffi_nif:with_body(InteractionRef, 1, ContentType, NewResBody)
     end,
     ok.

@@ -30,7 +30,7 @@
     given_with_params/3,
     new_msg_interaction/2,
     msg_given/2,
-    msg_given_with_params/3,
+    msg_given_with_param/3,
     msg_with_contents/3,
     reify_message/1,
     get_reified_message/1,
@@ -70,7 +70,7 @@
     given_with_params/3,
     new_msg_interaction/2,
     msg_given/2,
-    msg_given_with_params/3,
+    msg_given_with_param/3,
     msg_with_contents/3,
     reify_message/1,
     new_verifier/2,
@@ -185,7 +185,7 @@ new_msg_interaction(_, _) ->
 msg_given(_, _) ->
     erlang:nif_error("NIF library not loaded").
 
-msg_given_with_params(_, _, _) ->
+msg_given_with_param(_, _, _) ->
     erlang:nif_error("NIF library not loaded").
 
 msg_with_contents(_, _, _) ->

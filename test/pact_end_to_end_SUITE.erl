@@ -39,7 +39,7 @@ get_animal_success(Config) ->
     #{
         given => #{
             state => <<"an alligator with the name Mary exists">>,
-            params => thoas:encode(AnimalObject)
+            params => AnimalObject
         },
         upon_receiving => <<"a request to GET an animal: Mary">>,
         with_request => #{

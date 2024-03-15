@@ -175,7 +175,7 @@ static ERL_NIF_TERM msg_given(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[
     }
     char *provider_state = convert_erl_binary_to_c_string(env, argv[1]);
     MessageHandle interactionhandle = interaction_ref;
-    pactffi_message_given(interactionhandle, provider_state)
+    pactffi_message_given(interactionhandle, provider_state);
     
     return enif_make_atom(env, "ok"); 
 }
@@ -208,7 +208,7 @@ static ERL_NIF_TERM given_with_params(ErlNifEnv *env, int argc, const ERL_NIF_TE
     }
 }
 
-static ERL_NIF_TERM msg_given_with_params(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+static ERL_NIF_TERM msg_given_with_param(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     if (!enif_is_number(env, argv[0]))
     {
@@ -224,9 +224,14 @@ static ERL_NIF_TERM msg_given_with_params(ErlNifEnv *env, int argc, const ERL_NI
     {
         return enif_make_badarg(env);
     }
-    char *params = convert_erl_binary_to_c_string(env, argv[2]);
+    char *name = convert_erl_binary_to_c_string(env, argv[2]);
+    if (!enif_is_binary(env, argv[3]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *value = convert_erl_binary_to_c_string(env, argv[3]);
     MessageHandle interactionhandle = interaction_ref;
-    pactffi_message_given_with_param(interactionhandle, provider_state, params)
+    pactffi_message_given_with_param(interactionhandle, provider_state, name, value);
     
     return enif_make_atom(env, "ok");
 }
@@ -356,10 +361,10 @@ static ERL_NIF_TERM msg_with_contents(ErlNifEnv *env, int argc, const ERL_NIF_TE
     {
         return enif_make_badarg(env);
     }
-    char *content_type = convert_erl_binary_to_c_string(env, argv[2]);
-    char *body_json_string = convert_erl_binary_to_c_string(env, argv[3]);
+    char *content_type = convert_erl_binary_to_c_string(env, argv[1]);
+    uint8_t *body_json_string = convert_erl_binary_to_c_string(env, argv[2]);
 
-    pactffi_message_with_contents(interactH, content_type, body_json_string, NULL)
+    pactffi_message_with_contents(interactH, content_type, body_json_string, NULL);
     
     return enif_make_atom(env, "ok");
 }
@@ -373,7 +378,7 @@ static ERL_NIF_TERM reify_message(ErlNifEnv *env, int argc, const ERL_NIF_TERM a
     int interaction_ref = convert_erl_int_to_c_int(env, argv[0]);
     MessageHandle interactH = interaction_ref;
 
-    char *reified_message = pactffi_message_reify(interactH);
+    const char *reified_message = pactffi_message_reify(interactH);
 
     if (reified_message != NULL)
     {
@@ -593,7 +598,7 @@ static ERL_NIF_TERM new_verifier(ErlNifEnv *env, int argc, const ERL_NIF_TERM ar
     }
     char *name = convert_erl_binary_to_c_string(env, argv[0]);
     char *version = convert_erl_binary_to_c_string(env, argv[1]);
-    VerifierHandle verifierhandle;
+    struct VerifierHandle verifierhandle;
     verifierhandle = pactffi_verifier_new_for_application(name, version);
 
     return enif_make_int(env, verifierhandle);
@@ -606,7 +611,7 @@ static ERL_NIF_TERM verifier_set_provider_info(ErlNifEnv *env, int argc, const E
         return enif_make_badarg(env);
     }
     int verifier_ref = convert_erl_int_to_c_int(env, argv[0]);
-    VerifierHandle verifierhandle = verifier_ref;
+    struct VerifierHandle verifierhandle = verifier_ref;
     if (!enif_is_binary(env, argv[1]))
     {
         return enif_make_badarg(env);
@@ -633,7 +638,7 @@ static ERL_NIF_TERM verifier_set_provider_info(ErlNifEnv *env, int argc, const E
     }
     char *path = convert_erl_binary_to_c_string(env, argv[5]);
 
-    pactffi_verifier_set_provider_info(verifierhandle, name, scheme, host, port, path)
+    pactffi_verifier_set_provider_info(verifierhandle, name, scheme, host, port, path);
 
     return enif_make_atom(env, "ok");
 }
@@ -645,7 +650,7 @@ static ERL_NIF_TERM verifier_add_provider_transport(ErlNifEnv *env, int argc, co
         return enif_make_badarg(env);
     }
     int verifier_ref = convert_erl_int_to_c_int(env, argv[0]);
-    VerifierHandle verifierhandle = verifier_ref;
+    struct VerifierHandle verifierhandle = verifier_ref;
     if (!enif_is_binary(env, argv[4]))
     {
         return enif_make_badarg(env);
@@ -667,7 +672,7 @@ static ERL_NIF_TERM verifier_add_provider_transport(ErlNifEnv *env, int argc, co
     }
     char *path = convert_erl_binary_to_c_string(env, argv[2]);
 
-    pactffi_verifier_add_provider_transport(verifierhandle, protocol, port, path, scheme)
+    pactffi_verifier_add_provider_transport(verifierhandle, protocol, port, path, scheme);
 
     return enif_make_atom(env, "ok");
 }
@@ -679,7 +684,7 @@ static ERL_NIF_TERM verifier_set_provider_state(ErlNifEnv *env, int argc, const 
         return enif_make_badarg(env);
     }
     int verifier_ref = convert_erl_int_to_c_int(env, argv[0]);
-    VerifierHandle verifierhandle = verifier_ref;
+    struct VerifierHandle verifierhandle = verifier_ref;
     if (!enif_is_binary(env, argv[1]))
     {
         return enif_make_badarg(env);
@@ -696,7 +701,7 @@ static ERL_NIF_TERM verifier_set_provider_state(ErlNifEnv *env, int argc, const 
     }
     int body = convert_erl_int_to_c_int(env, argv[3]);
 
-    pactffi_verifier_set_provider_state(verifierhandle, url, teardown, body)
+    pactffi_verifier_set_provider_state(verifierhandle, url, teardown, body);
     return enif_make_atom(env, "ok");
 }
 
@@ -707,7 +712,7 @@ static ERL_NIF_TERM verifier_set_publish_options(ErlNifEnv *env, int argc, const
         return enif_make_badarg(env);
     }
     int verifier_ref = convert_erl_int_to_c_int(env, argv[0]);
-    VerifierHandle verifierhandle = verifier_ref;
+    struct VerifierHandle verifierhandle = verifier_ref;
     if (!enif_is_binary(env, argv[1]))
     {
         return enif_make_badarg(env);
@@ -736,14 +741,14 @@ static ERL_NIF_TERM verifier_add_file_source(ErlNifEnv *env, int argc, const ERL
         return enif_make_badarg(env);
     }
     int verifier_ref = convert_erl_int_to_c_int(env, argv[0]);
-    VerifierHandle verifierhandle = verifier_ref;
+    struct VerifierHandle verifierhandle = verifier_ref;
     if (!enif_is_binary(env, argv[1]))
     {
         return enif_make_badarg(env);
     }
     char *file = convert_erl_binary_to_c_string(env, argv[1]);
 
-    pactffi_verifier_add_file_source(verifierhandle, file)
+    pactffi_verifier_add_file_source(verifierhandle, file);
 
     return enif_make_atom(env, "ok");
 }
@@ -755,7 +760,7 @@ static ERL_NIF_TERM verifier_add_broker(ErlNifEnv *env, int argc, const ERL_NIF_
         return enif_make_badarg(env);
     }
     int verifier_ref = convert_erl_int_to_c_int(env, argv[0]);
-    VerifierHandle verifierhandle = verifier_ref;
+    struct VerifierHandle verifierhandle = verifier_ref;
     if (!enif_is_binary(env, argv[1]))
     {
         return enif_make_badarg(env);
@@ -802,7 +807,7 @@ static ERL_NIF_TERM verifier_add_broker(ErlNifEnv *env, int argc, const ERL_NIF_
     int *consumer_version_selectors_len = convert_erl_int_to_c_int(env, argv[7]);
 
 
-    pactffi_verifier_broker_source_with_selectors(verifierhandle, url, username, password, NULL, enable_pending_pacts, NULL, NULL, NULL, providerbranch, consumer_version_selectors, consumer_version_selectors_len, NULL, NULL)
+    pactffi_verifier_broker_source_with_selectors(verifierhandle, url, username, password, NULL, enable_pending_pacts, NULL, NULL, NULL, providerbranch, consumer_version_selectors, consumer_version_selectors_len, NULL, NULL);
     return enif_make_atom(env, "ok");
 }
 
@@ -814,7 +819,7 @@ static ERL_NIF_TERM verifier_execute(ErlNifEnv *env, int argc, const ERL_NIF_TER
         return enif_make_badarg(env);
     }
     int verifier_ref = convert_erl_int_to_c_int(env, argv[0]);
-    VerifierHandle verifierhandle = verifier_ref;
+    struct VerifierHandle verifierhandle = verifier_ref;
     int output = pactffi_verifier_execute(verifierhandle);
 
     return enif_make_int(env, output);
@@ -827,7 +832,7 @@ static ERL_NIF_TERM verifier_shutdown(ErlNifEnv *env, int argc, const ERL_NIF_TE
         return enif_make_badarg(env);
     }
     int verifier_ref = convert_erl_int_to_c_int(env, argv[0]);
-    VerifierHandle verifierhandle = verifier_ref;
+    struct VerifierHandle verifierhandle = verifier_ref;
     pactffi_verifier_shutdown(verifierhandle);
 
     return enif_make_atom(env, "ok");
@@ -858,7 +863,7 @@ static ErlNifFunc nif_funcs[] =
         {"given_with_params", 3, given_with_params},
         {"new_msg_interaction", 2, new_msg_interaction},
         {"msg_given", 2, msg_given},
-        {"msg_given_with_params", 3, msg_given_with_params},
+        {"msg_given_with_param", 3, msg_given_with_param},
         {"msg_with_contents", 3, msg_with_contents},
         {"reify_message", 1, reify_message},
         {"new_verifier", 2, new_verifier},

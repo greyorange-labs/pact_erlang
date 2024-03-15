@@ -6,7 +6,9 @@
     msg_interaction/2,
     verify_interaction/1,
     write_interaction/2,
-    cleanup/1
+    cleanup/1,
+    encode_value/1,
+    decode_value/1
 ]).
 
 -type consumer() :: binary().
@@ -45,3 +47,26 @@ write_interaction(PactPid, Path) ->
 cleanup(PactPid) ->
     pact_consumer_http:cleanup_interaction(PactPid),
     pact_ref_server:stop(PactPid).
+
+
+%% Internal Functions
+
+-spec encode_value(map() | binary()) -> binary().
+encode_value(Value) ->
+    %% Checking if someone used regex_match
+    case is_map(Value) of
+        true ->
+            thoas:encode(Value);
+        false ->
+            Value
+    end.
+
+-spec encode_value(map() | binary()) -> thoas:json_term().
+decode_value(Value) ->
+    case is_map(Value) of
+        true ->
+            Value;
+        false ->
+            {ok, DecodedValue} = thoas:decode(Value),
+            DecodedValue
+    end.
