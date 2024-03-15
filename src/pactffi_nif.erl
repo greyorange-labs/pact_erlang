@@ -42,7 +42,8 @@
     verifier_add_file_source/2,
     verifier_add_broker/8,
     verifier_execute/1,
-    verifier_shutdown/1
+    verifier_shutdown/1,
+    verify_via_file/9
 ]).
 
 % Import the NIF functions from the C library
@@ -81,7 +82,8 @@
     verifier_add_file_source/2,
     verifier_add_broker/8,
     verifier_execute/1,
-    verifier_shutdown/1
+    verifier_shutdown/1,
+    verify_via_file/9
 ]).
 -on_load(init/0).
 
@@ -219,4 +221,7 @@ verifier_execute(_) ->
     erlang:nif_error("NIF library not loaded").
 
 verifier_shutdown(_) ->
+    erlang:nif_error("NIF library not loaded").
+
+verify_via_file(_, _, _, _, _, _, _, _, _) ->
     erlang:nif_error("NIF library not loaded").

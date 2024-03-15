@@ -59,11 +59,13 @@ animal_consume_message(Config) ->
 verify_producer(_Config) ->
     %% TODO
     {ok, Port} = weather_service:start(0),
-    Handle = pactffi_nif:new_verifier(<<"weather_service">>, <<"default">>),
-    pactffi_nif:verifier_set_provider_info(Handle, <<"weather_service">>, <<"http">>, <<"127.0.0.1">>, Port, <<"/generate_weather">>),
-    pactffi_nif:verifier_add_provider_transport(Handle, <<"message">>, Port, <<"/generate_weather">>, <<"http">>),
-    pactffi_nif:verifier_set_publish_options(Handle, <<"default">>, <<"develop">>),
-    pactffi_nif:verifier_add_file_source(Handle, <<"./pacts">>),
-    ?assertEqual(0, pactffi_nif:verifier_execute(Handle)),
-    pactffi_nif:verifier_shutdown(Handle),
+    Name = <<"weather_service">>,
+    Version =  <<"default">>,
+    Scheme = <<"http">>,
+    Host = <<"127.0.0.1">>,
+    Path = <<"/generate_weather">>,
+    Branch = <<"develop">>,
+    FilePath = <<"./pacts">>,
+    Protocol = <<"message">>,
+    ?assertEqual(0, pactffi_nif:verify_via_file(Name, Scheme, Host, Port, Path, Version, Branch, FilePath, Protocol)),
     weather_service:stop().
