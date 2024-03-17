@@ -35,8 +35,18 @@ interaction(PactPid, Interaction) ->
 cleanup_interaction(PactPid) ->
     PactRef = pact_ref_server:get_pact_ref(PactPid),
     MockServerPort = pact_ref_server:get_mock_server_port(PactPid),
-    ok = pactffi_nif:cleanup_mock_server(MockServerPort),
-    pactffi_nif:free_pact_handle(PactRef).
+    case MockServerPort of
+        undefined ->
+            ok;
+        _ ->
+            ok = pactffi_nif:cleanup_mock_server(MockServerPort)
+    end,
+    case PactRef of
+        undefined ->
+            ok;
+        _ ->
+            pactffi_nif:free_pact_handle(PactRef)
+    end.
 
 %% Internal functions
 
@@ -60,7 +70,7 @@ init_interaction(PactPid, Interaction) ->
                 undefined ->
                     pactffi_nif:given(InteractionRef, ProviderState);
                 _ ->
-                    NewStateJson = pact_consumer:encode_value(StateJson)
+                    NewStateJson = pact_consumer:encode_value(StateJson),
                     pactffi_nif:given_with_params(InteractionRef, ProviderState, NewStateJson)
             end
     end,
@@ -82,7 +92,7 @@ start_mock_server(PactPid, PactRef, Host, Port, InteractionPart) ->
 insert_request_details(InteractionRef, RequestDetails) ->
     ReqMethod = maps:get(method, RequestDetails),
     ReqPath = maps:get(path, RequestDetails),
-    NewReqPath = CheckIfMap(ReqPath),
+    NewReqPath = pact_consumer:encode_value(ReqPath),
     pactffi_nif:with_request(InteractionRef, ReqMethod, NewReqPath),
     ReqHeaders = maps:get(headers, RequestDetails, #{}),
     ContentType = get_content_type(ReqHeaders),

@@ -34,15 +34,15 @@
     msg_with_contents/3,
     reify_message/1,
     get_reified_message/1,
-    new_verifier/2,
-    verifier_set_provider_info/6,
-    verifier_add_provider_transport/5,
-    verifier_set_provider_state/4,
-    verifier_set_publish_options/3,
-    verifier_add_file_source/2,
-    verifier_add_broker/8,
-    verifier_execute/1,
-    verifier_shutdown/1,
+    % new_verifier/2,
+    % verifier_set_provider_info/6,
+    % verifier_add_provider_transport/5,
+    % verifier_set_provider_state/4,
+    % verifier_set_publish_options/3,
+    % verifier_add_file_source/2,
+    % verifier_add_broker/8,
+    % verifier_execute/1,
+    % verifier_shutdown/1,
     verify_via_file/9
 ]).
 
@@ -74,15 +74,15 @@
     msg_given_with_param/3,
     msg_with_contents/3,
     reify_message/1,
-    new_verifier/2,
-    verifier_set_provider_info/6,
-    verifier_add_provider_transport/5,
-    verifier_set_provider_state/4,
-    verifier_set_publish_options/3,
-    verifier_add_file_source/2,
-    verifier_add_broker/8,
-    verifier_execute/1,
-    verifier_shutdown/1,
+    % new_verifier/2,
+    % verifier_set_provider_info/6,
+    % verifier_add_provider_transport/5,
+    % verifier_set_provider_state/4,
+    % verifier_set_publish_options/3,
+    % verifier_add_file_source/2,
+    % verifier_add_broker/8,
+    % verifier_execute/1,
+    % verifier_shutdown/1,
     verify_via_file/9
 ]).
 -on_load(init/0).
@@ -196,32 +196,32 @@ msg_with_contents(_, _, _) ->
 reify_message(_) ->
     erlang:nif_error("NIF library not loaded").
 
-new_verifier(_, _) ->
-    erlang:nif_error("NIF library not loaded").
+% new_verifier(_, _) ->
+%     erlang:nif_error("NIF library not loaded").
 
-verifier_set_provider_info(_, _, _, _, _, _) ->
-    erlang:nif_error("NIF library not loaded").
+% verifier_set_provider_info(_, _, _, _, _, _) ->
+%     erlang:nif_error("NIF library not loaded").
 
-verifier_add_provider_transport(_, _, _, _, _) ->
-    erlang:nif_error("NIF library not loaded").
+% verifier_add_provider_transport(_, _, _, _, _) ->
+%     erlang:nif_error("NIF library not loaded").
 
-verifier_set_provider_state(_, _, _, _) ->
-    erlang:nif_error("NIF library not loaded").
+% verifier_set_provider_state(_, _, _, _) ->
+%     erlang:nif_error("NIF library not loaded").
 
-verifier_set_publish_options(_, _, _) ->
-    erlang:nif_error("NIF library not loaded").
+% verifier_set_publish_options(_, _, _) ->
+%     erlang:nif_error("NIF library not loaded").
 
-verifier_add_file_source(_, _) ->
-    erlang:nif_error("NIF library not loaded").
+% verifier_add_file_source(_, _) ->
+%     erlang:nif_error("NIF library not loaded").
 
-verifier_add_broker(_, _, _, _, _, _, _, _) ->
-    erlang:nif_error("NIF library not loaded").
+% verifier_add_broker(_, _, _, _, _, _, _, _) ->
+%     erlang:nif_error("NIF library not loaded").
 
-verifier_execute(_) ->
-    erlang:nif_error("NIF library not loaded").
+% verifier_execute(_) ->
+%     erlang:nif_error("NIF library not loaded").
 
-verifier_shutdown(_) ->
-    erlang:nif_error("NIF library not loaded").
+% verifier_shutdown(_) ->
+%     erlang:nif_error("NIF library not loaded").
 
-verify_via_file(_, _, _, _, _, _, _, _, _) ->
+verify_via_file(_1, _2, _3, _4, _5, _6, _7, _8, _9) ->
     erlang:nif_error("NIF library not loaded").

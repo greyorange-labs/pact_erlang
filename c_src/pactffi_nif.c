@@ -30,6 +30,24 @@ static int convert_erl_int_to_c_int(ErlNifEnv *env, ERL_NIF_TERM int_term)
     return c_int;
 }
 
+static uint8_t* convertCharToUint8(const char* input) {
+    // Calculate the length of the string
+    size_t length = strlen(input);
+    
+    // Allocate memory for the new uint8_t array
+    uint8_t* output = (uint8_t*)malloc((length + 1) * sizeof(uint8_t)); // +1 for null terminator
+    
+    // Copy the data from char* to uint8_t*
+    for (size_t i = 0; i < length; i++) {
+        output[i] = (uint8_t)input[i];
+    }
+    
+    // Null-terminate the uint8_t array
+    output[length] = '\0';
+    
+    return output;
+}
+
 static ERL_NIF_TERM version(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     return enif_make_string(env, pactffi_version(), ERL_NIF_LATIN1);
@@ -362,10 +380,12 @@ static ERL_NIF_TERM msg_with_contents(ErlNifEnv *env, int argc, const ERL_NIF_TE
         return enif_make_badarg(env);
     }
     char *content_type = convert_erl_binary_to_c_string(env, argv[1]);
-    uint8_t *body_json_string = uint8_t *(convert_erl_binary_to_c_string(env, argv[2]));
+    uint8_t *body_json_string = convertCharToUint8(convert_erl_binary_to_c_string(env, argv[2]));
 
-    pactffi_message_with_contents(interactH, content_type, body_json_string, NULL);
-    
+    pactffi_message_with_contents(interactH, content_type, body_json_string, -1);
+
+    free(body_json_string);
+
     return enif_make_atom(env, "ok");
 }
 
@@ -608,31 +628,31 @@ static ERL_NIF_TERM verify_via_file(ErlNifEnv *env, int argc, const ERL_NIF_TERM
         return enif_make_badarg(env);
     }
     int port = convert_erl_int_to_c_int(env, argv[3]);
-    if (!enif_is_number(env, argv[4]))
+    if (!enif_is_binary(env, argv[4]))
     {
         return enif_make_badarg(env);
     }
     char *path = convert_erl_binary_to_c_string(env, argv[4]);
 
-    if (!enif_is_number(env, argv[5]))
+    if (!enif_is_binary(env, argv[5]))
     {
         return enif_make_badarg(env);
     }
     char *version = convert_erl_binary_to_c_string(env, argv[5]);
 
-    if (!enif_is_number(env, argv[6]))
+    if (!enif_is_binary(env, argv[6]))
     {
         return enif_make_badarg(env);
     }
     char *branch = convert_erl_binary_to_c_string(env, argv[6]);
 
-    if (!enif_is_number(env, argv[7]))
+    if (!enif_is_binary(env, argv[7]))
     {
         return enif_make_badarg(env);
     }
     char *file_path = convert_erl_binary_to_c_string(env, argv[7]);
 
-    if (!enif_is_number(env, argv[8]))
+    if (!enif_is_binary(env, argv[8]))
     {
         return enif_make_badarg(env);
     }

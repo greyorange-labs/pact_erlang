@@ -22,9 +22,9 @@ v4(Consumer, Provider) ->
 -spec interaction(pact_pid(), pact_interaction_details()) ->
     {ok, message()}.
 interaction(PactPid, Interaction) ->
-    {PactRef, InteractionRef} = init_interaction(PactPid, Interaction),
+    {_PactRef, InteractionRef} = init_interaction(PactPid, Interaction),
     Message = maps:get(with_contents, Interaction, #{}),
-    ok = insert_contents(InteractionRef, Message).
+    ok = insert_contents(InteractionRef, Message),
     pactffi_nif:get_reified_message(InteractionRef).
 
 -spec cleanup_interaction(pact_pid()) -> ok.
@@ -69,7 +69,7 @@ init_interaction(PactPid, Interaction) ->
 
 -spec insert_contents(pact_interaction_ref(), message()) -> ok.
 insert_contents(InteractionRef, Message) ->
-    ResHeaders = maps:get(headers, ResponseDetails, #{}),
+    ResHeaders = maps:get(headers, Message, #{}),
     ContentType = get_content_type(ResHeaders),
     case Message of
         undefined ->

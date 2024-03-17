@@ -4,7 +4,7 @@
 -export([
     start/0,
     start/1,
-    stop/0,
+    stop/1,
     do/1,
     process_weather_data/1
 ]).
@@ -17,13 +17,14 @@ start() ->
 start(Port) ->
     {ok, _} = application:ensure_all_started(inets),
     create_table(),
-    {ok, Pid} = inets:start(httpd, [{port, Port}, {server_name, "animal_service"}, {server_root, "./"}, {document_root, "./"}, {modules, [animal_service]}]),
+    {ok, Pid} = inets:start(httpd, [{bind_address, "127.0.0.1"}, {port, Port}, {server_name, "animal_service"}, {server_root, "./"}, {document_root, "./"}, {modules, [animal_service]}]),
     Info = httpd:info(Pid),
     {port, ListenPort} = lists:keyfind(port, 1, Info),
-    {ok, ListenPort}.
+    {ok, ListenPort, Pid}.
 
-stop() ->
+stop(Pid) ->
     catch ets:delete(?TABLE_NAME),
+    inets:stop(httpd, Pid),
     inets:stop().
 
 create_table() ->
@@ -128,13 +129,13 @@ make_404_response() ->
 
 process_weather_data(Payload) ->
     #{
-        weather := #{
-            temperature := Temp,
-            humidity := Humidity,
-            wind_speed_kmh := WindSpeed
+        <<"weather">> := #{
+            <<"temperature">> := _Temp,
+            <<"humidity">> := _Humidity,
+            <<"wind_speed_kmh">> := _WindSpeed
         },
-        timestamp := TimeStamp
-    } = Payload
+        <<"timestamp">> := _TimeStamp
+    } = Payload,
     %% Do something with weather data like validation,
     %% Db update
     ok.

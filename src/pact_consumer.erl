@@ -61,7 +61,7 @@ encode_value(Value) ->
             Value
     end.
 
--spec encode_value(map() | binary()) -> thoas:json_term().
+-spec decode_value(map() | binary()) -> thoas:json_term().
 decode_value(Value) ->
     case is_map(Value) of
         true ->
