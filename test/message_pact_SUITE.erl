@@ -8,12 +8,12 @@
 
 %% {group, consumer}, {group, producer}
 
-all() -> [{group, consumer}].
+all() -> [{group, consumer}, {group, producer}].
 
 groups() ->
     [
-        {consumer, [animal_consume_message]}
-        % {producer, [verify_producer]}
+        {consumer, [animal_consume_message]},
+        {producer, [verify_producer]}
     ].
 
 
