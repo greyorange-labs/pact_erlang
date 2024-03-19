@@ -80,9 +80,11 @@ handle_post_request(Req, State) ->
 
 
 generate_weather_message(Req, State) ->
+    ct:pal("IN APIIIIII"),
     {ok, Body, Request} = cowboy_req:read_body(Req),
     {ok, StateReq} = thoas:decode(Body),
     Description = maps:get(<<"description">>, StateReq, <<"">>),
+    ct:pal("Description in POST request ~p", [Description]),
     ArgsList = given_args_mapping(Description),
     Message = erlang:apply(test_weather_api_handler, generate_message, ArgsList),
     respond_with_status_code(200, thoas:encode(Message), Request, State).

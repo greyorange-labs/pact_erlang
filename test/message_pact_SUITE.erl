@@ -19,6 +19,9 @@ groups() ->
 
 init_per_suite(Config) ->
     application:ensure_all_started(cowboy),
+    pactffi_nif:logger_init(),
+    pactffi_nif:logger_attach_sink(<<"stdout">>, 4),
+    pactffi_nif:logger_apply(),
     Config.
 
 end_per_suite(_Config) ->
@@ -29,6 +32,8 @@ init_per_group(consumer, Config) ->
     PactRef = pact:v4(<<"animal_service">>, <<"weather_service">>),
     [{pact_ref, PactRef} | Config];
 init_per_group(producer, Config) ->
+    my_server:start_link(),
+    my_server:start_server(),
     Config.
 
 end_per_group(consumer, Config) ->
@@ -36,6 +41,7 @@ end_per_group(consumer, Config) ->
     pact:cleanup(PactRef),
     ok;
 end_per_group(producer, Config) ->
+    my_server:stop_server(),
     Config.
 
 
@@ -57,38 +63,17 @@ animal_consume_message(Config) ->
     }),
     #{<<"contents">> := TestMessageContents} = TestMessage,
     ?assertMatch(ok, animal_service:process_weather_data(TestMessageContents)),
-    % {ok, matched} = pact:verify(PactRef),
     pact:write(PactRef).
 
 verify_producer(_Config) ->
-    %% TODO
-    Port = init_test_api_handler(),
+    Port = 8080,
     Name = <<"weather_service">>,
     Version =  <<"default">>,
     Scheme = <<"http">>,
-    Host = <<"localhost">>,
+    Host = <<"127.0.0.1">>,
     Path = <<"/test_weather/generate_weather">>,
     Branch = <<"develop">>,
-    FilePath = <<"./pacts">>,
+    FilePath = <<"/home/ranjan/work/pact_erlang/_build/test/logs/ct_run.nonode@nohost.2024-03-19_06.19.00/pacts">>,
     Protocol = <<"message">>,
-    ?assertEqual(0, pactffi_nif:verify_via_file(Name, Scheme, Host, Port, Path, Version, Branch, FilePath, Protocol)),
-    stop_test_api_handler(),
-    ok.
-
-init_test_api_handler() ->
-    Dispatch = cowboy_router:compile([
-        {<<"localhost">>, [
-            {"/test_weather/[...]", test_weather_api_handler, []}
-        ]}
-    ]),
-    {ok, _} = cowboy:start_clear(
-        test_weather_api_handler,
-        [{port, 8080}],
-        #{env => #{dispatch => Dispatch}}
-    ),
-    Dispatch,
-    Port = ranch:get_port(test_weather_api_handler),
-    Port.
-
-stop_test_api_handler() ->
-    ok = cowboy:stop_listener(test_weather_api_handler).
+    Output = pactffi_nif:verify_via_file(Name, Scheme, Host, Port, Path, Version, Branch, FilePath, Protocol),
+    ?assertEqual(0, Output).
