@@ -662,6 +662,7 @@ static ERL_NIF_TERM verify_via_file(ErlNifEnv *env, int argc, const ERL_NIF_TERM
     verifierhandle = pactffi_verifier_new_for_application(name, version);
     pactffi_verifier_set_provider_info(verifierhandle, name, scheme, host, port, path);
     pactffi_verifier_add_provider_transport(verifierhandle, protocol, port, path, scheme);
+    pactffi_verifier_set_verification_options(verifierhandle, 0, 5000),
     pactffi_verifier_set_publish_options(verifierhandle, version, NULL, NULL, -1, branch);
     pactffi_verifier_add_directory_source(verifierhandle, file_path);
     int output = pactffi_verifier_execute(verifierhandle);

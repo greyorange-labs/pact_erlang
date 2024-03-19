@@ -1,4 +1,4 @@
--module(pact_end_to_end_SUITE).
+-module(pact_end_to_end).
 -compile(nowarn_export_all).
 -compile(export_all).
 

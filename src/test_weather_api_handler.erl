@@ -71,6 +71,7 @@ handle_get_request(Req, State) ->
     {stop, cowboy_req:req(), any()}.
 handle_post_request(Req, State) ->
     PathInfo = cowboy_req:path_info(Req),
+    ct:pal("request is ~p", [PathInfo]),
     case PathInfo of
         [<<"generate_weather">>] ->
             generate_weather_message(Req, State);
