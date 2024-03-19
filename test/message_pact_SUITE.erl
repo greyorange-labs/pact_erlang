@@ -73,7 +73,7 @@ verify_producer(_Config) ->
     Host = <<"127.0.0.1">>,
     Path = <<"/test_weather/generate_weather">>,
     Branch = <<"develop">>,
-    FilePath = <<"/home/ranjan/work/pact_erlang/_build/test/logs/ct_run.nonode@nohost.2024-03-19_06.19.00/pacts">>,
+    FilePath = <<"./pacts">>,
     Protocol = <<"message">>,
     Output = pactffi_nif:verify_via_file(Name, Scheme, Host, Port, Path, Version, Branch, FilePath, Protocol),
     ?assertEqual(0, Output).
