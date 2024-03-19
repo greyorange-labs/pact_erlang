@@ -19,9 +19,6 @@ groups() ->
 
 init_per_suite(Config) ->
     application:ensure_all_started(cowboy),
-    pactffi_nif:logger_init(),
-    pactffi_nif:logger_attach_sink(<<"stdout">>, 4),
-    pactffi_nif:logger_apply(),
     Config.
 
 end_per_suite(_Config) ->
