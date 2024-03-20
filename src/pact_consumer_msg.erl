@@ -6,8 +6,6 @@
 
 -type pact_ref() :: integer().
 -type pact_interaction_ref() :: integer().
--type consumer() :: binary().
--type provider() :: binary().
 -type pact_pid() :: pid().
 -type pact_interaction_details() :: map().
 -type message() :: map().
