@@ -190,8 +190,7 @@ verify_producer(_Config) ->
     Branch = <<"develop">>,
     FilePath = <<"./pacts">>,
     Protocol = <<"http">>,
-    ok = pactffi_nif:verify_file_pacts(Name, Scheme, Host, Port, Path, Version, Branch, FilePath, Protocol, self(), list_to_binary("http://localhost:" ++ integer_to_list(Port) ++ "/pactStateChange")),
-    receive X ->
-        ?assertEqual(0, X)
-    end,
+    StateChangePath = list_to_binary("http://localhost:" ++ integer_to_list(Port) ++ "/pactStateChange"),
+    Output = pactffi_nif:verify_file_pacts(Name, Scheme, Host, Port, Path, Version, Branch, FilePath, Protocol, self(), StateChangePath),
+    ?assertEqual(0, Output),
     animal_service:stop().

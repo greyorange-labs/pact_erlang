@@ -193,6 +193,9 @@ schedule_async_verify(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11) ->
 verify_file_pacts(
     Name, Scheme, Host, Port, Path, Version, Branch, FilePath, Protocol, Pid, StatePath
 ) ->
-    schedule_async_verify(
+    ok = schedule_async_verify(
         Name, Scheme, Host, Port, Path, Version, Branch, FilePath, Protocol, Pid, StatePath
-    ).
+    ),
+    receive Output ->
+        Output
+    end.

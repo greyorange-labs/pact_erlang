@@ -137,10 +137,8 @@ verify_producer(_Config) ->
     Branch = <<"develop">>,
     FilePath = <<"./pacts">>,
     Protocol = <<"message">>,
-    ok = pactffi_nif:verify_file_pacts(Name, Scheme, Host, Port, Path, Version, Branch, FilePath, Protocol, self(), <<"">>),
-    receive X ->
-        ?assertEqual(0, X)
-    end,
+    Output = pactffi_nif:verify_file_pacts(Name, Scheme, Host, Port, Path, Version, Branch, FilePath, Protocol, self(), <<"">>),
+    ?assertEqual(0, Output),
     stop_handler().
 
 
