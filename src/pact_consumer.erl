@@ -7,8 +7,7 @@
     verify_interaction/1,
     write_interaction/2,
     cleanup/1,
-    encode_value/1,
-    decode_value/1
+    encode_value/1
 ]).
 
 -type consumer() :: binary().
@@ -58,14 +57,4 @@ encode_value(Value) ->
             thoas:encode(Value);
         false ->
             Value
-    end.
-
--spec decode_value(map() | binary()) -> thoas:json_term().
-decode_value(Value) ->
-    case is_map(Value) of
-        true ->
-            Value;
-        false ->
-            {ok, DecodedValue} = thoas:decode(Value),
-            DecodedValue
     end.
