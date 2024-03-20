@@ -23,6 +23,24 @@ static char *convert_erl_binary_to_c_string(ErlNifEnv *env, ERL_NIF_TERM binary_
     return str;
 }
 
+static uint8_t* convertCharToUint8(const char* input) {
+    // Calculate the length of the string
+    size_t length = strlen(input);
+
+    // Allocate memory for the new uint8_t array
+    uint8_t* output = (uint8_t*)malloc((length + 1) * sizeof(uint8_t)); // +1 for null terminator
+    
+    // Copy the data from char* to uint8_t*
+    for (size_t i = 0; i < length; i++) {
+        output[i] = (uint8_t)input[i];
+    }
+
+    // Null-terminate the uint8_t array
+    output[length] = '\0';
+
+    return output;
+}
+
 static int convert_erl_int_to_c_int(ErlNifEnv *env, ERL_NIF_TERM int_term)
 {
     int c_int;
