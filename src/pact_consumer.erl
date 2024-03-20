@@ -28,7 +28,7 @@ interaction(PactPid, Interaction) ->
     pact_consumer_http:interaction(PactPid, Interaction).
 
 -spec msg_interaction(pact_pid(), pact_interaction_details()) ->
-    {ok, pact_message_data()}.
+    pact_message_data().
 msg_interaction(PactPid, Interaction) ->
     pact_consumer_msg:interaction(PactPid, Interaction).
 

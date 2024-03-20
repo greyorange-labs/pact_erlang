@@ -20,7 +20,7 @@ v4(Consumer, Provider) ->
     PactPid.
 
 -spec interaction(pact_pid(), pact_interaction_details()) ->
-    {ok, message()}.
+    message().
 interaction(PactPid, Interaction) ->
     {_PactRef, InteractionRef} = init_interaction(PactPid, Interaction),
     Message = maps:get(with_contents, Interaction, #{}),
@@ -72,13 +72,8 @@ init_interaction(PactPid, Interaction) ->
 insert_contents(InteractionRef, Message) ->
     ResHeaders = maps:get(headers, Message, #{}),
     ContentType = get_content_type(ResHeaders),
-    case Message of
-        undefined ->
-            ok;
-        _ ->
-            NewMessage = pact_consumer:encode_value(Message),
-            pactffi_nif:msg_with_contents(InteractionRef, ContentType, NewMessage)
-    end,
+    NewMessage = pact_consumer:encode_value(Message),
+    pactffi_nif:msg_with_contents(InteractionRef, ContentType, NewMessage),
     ok.
 
 -spec get_content_type(map()) -> binary().

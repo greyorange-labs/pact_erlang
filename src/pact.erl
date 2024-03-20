@@ -37,7 +37,7 @@ interaction(PactPid, Interaction) ->
 %% @doc Creates a test message with the given interaction details
 %% Returns message data for running message consumer tests
 -spec msg_interaction(pact_pid(), pact_interaction_details()) ->
-    {ok, pact_message_data()}.
+    pact_message_data().
 msg_interaction(PactPid, Interaction) ->
     pact_consumer:msg_interaction(PactPid, Interaction).
 

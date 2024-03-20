@@ -60,10 +60,8 @@ handle_incoming_requests(Req, State) ->
 
 handle_get_request(Req, State) ->
     PathInfo = cowboy_req:path_info(Req),
-    ct:pal("Pathinfo in GET request ~p", [PathInfo]),
     case PathInfo of
         Other ->
-            ct:pal("URL not handled ~p", [Other]),
             api_404(Req, State)
     end.
 
@@ -71,7 +69,6 @@ handle_get_request(Req, State) ->
     {stop, cowboy_req:req(), any()}.
 handle_post_request(Req, State) ->
     PathInfo = cowboy_req:path_info(Req),
-    ct:pal("request is ~p", [PathInfo]),
     case PathInfo of
         [<<"generate_weather">>] ->
             generate_weather_message(Req, State);
@@ -80,11 +77,9 @@ handle_post_request(Req, State) ->
     end.
 
 generate_weather_message(Req, State) ->
-    ct:pal("IN APIIIIII"),
     {ok, Body, Request} = cowboy_req:read_body(Req),
     {ok, StateReq} = thoas:decode(Body),
     Description = maps:get(<<"description">>, StateReq, <<"">>),
-    ct:pal("Description in POST request ~p", [Description]),
     ArgsList = given_args_mapping(Description),
     Message = erlang:apply(test_weather_api_handler, generate_message, ArgsList),
     respond_with_status_code(200, thoas:encode(Message), Request, State).
