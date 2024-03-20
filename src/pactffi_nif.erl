@@ -65,15 +65,6 @@
     msg_given_with_param/4,
     msg_with_contents/3,
     reify_message/1,
-    % new_verifier/2,
-    % verifier_set_provider_info/6,
-    % verifier_add_provider_transport/5,
-    % verifier_set_provider_state/4,
-    % verifier_set_publish_options/3,
-    % verifier_add_file_source/2,
-    % verifier_add_broker/8,
-    % verifier_execute/1,
-    % verifier_shutdown/1,
     schedule_async_verify/11
 ]).
 -on_load(init/0).

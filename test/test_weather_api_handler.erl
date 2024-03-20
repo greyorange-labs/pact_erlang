@@ -1,7 +1,3 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%  API Handler for Test IMS Service
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 -module(test_weather_api_handler).
 
 -export([
@@ -61,7 +57,7 @@ handle_incoming_requests(Req, State) ->
 handle_get_request(Req, State) ->
     PathInfo = cowboy_req:path_info(Req),
     case PathInfo of
-        Other ->
+        _Other ->
             api_404(Req, State)
     end.
 

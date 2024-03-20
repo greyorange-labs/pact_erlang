@@ -5,8 +5,6 @@
 -include_lib("stdlib/include/assert.hrl").
 -include_lib("common_test/include/ct.hrl").
 
-%% {group, consumer}, {group, producer}
-
 all() -> [{group, consumer},{group, producer}].
 
 groups() ->
@@ -155,7 +153,6 @@ create_animal(Config) ->
 
 search_animals(Config) ->
     PactRef = ?config(pact_ref, Config),
-    _AnimalObj = #{<<"name">> => <<"Mary">>, <<"type">> => <<"alligator">>},
     Result = #{<<"animals">> => [#{<<"name">> => <<"Mary">>, <<"type">> => <<"alligator">>}]},
     Query = #{<<"type">> => <<"alligator">>},
     {ok, Port} = pact:interaction(PactRef,
