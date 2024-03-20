@@ -10,7 +10,7 @@ all() -> [{group, consumer}, {group, producer}].
 
 groups() ->
     [
-        {consumer, [animal_consume_message_1, animal_consume_message_2, animal_consume_message_3]},
+        {consumer, [animal_consume_message_1, animal_consume_message_2, animal_consume_message_3, animal_consume_message_4]},
         {producer, [verify_producer]}
     ].
 
@@ -102,6 +102,25 @@ animal_consume_message_3(Config) ->
             }
         },
         upon_receiving => <<"a weather data message 3">>,
+        with_contents => Message
+    }),
+    #{<<"contents">> := TestMessageContents} = TestMessage,
+    ?assertMatch(ok, animal_service:process_weather_data(TestMessageContents)),
+    pact:write(PactRef).
+
+animal_consume_message_4(Config) ->
+    PactRef = ?config(pact_ref, Config),
+    Message = pact:like(#{
+        weather => #{
+            temperature => 23.0,
+            humidity => 75.5,
+            wind_speed_kmh => 29
+        },
+        timestamp => <<"2024-03-14T10:22:13+05:30">>
+    }),
+    TestMessage = pact:msg_interaction(PactRef,
+    #{
+        upon_receiving => <<"a weather data message 4">>,
         with_contents => Message
     }),
     #{<<"contents">> := TestMessageContents} = TestMessage,
