@@ -10,7 +10,7 @@ all() -> [{group, consumer}, {group, producer}].
 
 groups() ->
     [
-        {consumer, [animal_consume_message]},
+        {consumer, [animal_consume_message_1, animal_consume_message_2, animal_consume_message_3]},
         {producer, [verify_producer]}
     ].
 
@@ -41,7 +41,7 @@ end_per_group(_, _Config) ->
     ok.
 
 
-animal_consume_message(Config) ->
+animal_consume_message_1(Config) ->
     PactRef = ?config(pact_ref, Config),
     Message = pact:like(#{
         weather => #{
@@ -55,6 +55,53 @@ animal_consume_message(Config) ->
     #{
         given => <<"weather data for animals">>,
         upon_receiving => <<"a weather data message">>,
+        with_contents => Message
+    }),
+    #{<<"contents">> := TestMessageContents} = TestMessage,
+    ?assertMatch(ok, animal_service:process_weather_data(TestMessageContents)),
+    pact:write(PactRef).
+
+animal_consume_message_2(Config) ->
+    PactRef = ?config(pact_ref, Config),
+    Message = pact:like(#{
+        weather => #{
+            temperature => 23.0,
+            humidity => 75.5,
+            wind_speed_kmh => 29
+        },
+        timestamp => <<"2024-03-14T10:22:13+05:30">>
+    }),
+    TestMessage = pact:msg_interaction(PactRef,
+    #{
+        given => #{
+            state => <<"weather data for animals 2">>
+        },
+        upon_receiving => <<"a weather data message 2">>,
+        with_contents => Message
+    }),
+    #{<<"contents">> := TestMessageContents} = TestMessage,
+    ?assertMatch(ok, animal_service:process_weather_data(TestMessageContents)),
+    pact:write(PactRef).
+
+animal_consume_message_3(Config) ->
+    PactRef = ?config(pact_ref, Config),
+    Message = pact:like(#{
+        weather => #{
+            temperature => 23.0,
+            humidity => 75.5,
+            wind_speed_kmh => 29
+        },
+        timestamp => <<"2024-03-14T10:22:13+05:30">>
+    }),
+    TestMessage = pact:msg_interaction(PactRef,
+    #{
+        given => #{
+            state => <<"weather data for animals 3">>,
+            params => #{
+                <<"weather">> => <<"cold">>
+            }
+        },
+        upon_receiving => <<"a weather data message 3">>,
         with_contents => Message
     }),
     #{<<"contents">> := TestMessageContents} = TestMessage,

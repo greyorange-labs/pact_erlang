@@ -41,12 +41,7 @@ cleanup_interaction(PactPid) ->
         _ ->
             ok = pactffi_nif:cleanup_mock_server(MockServerPort)
     end,
-    case PactRef of
-        undefined ->
-            ok;
-        _ ->
-            pactffi_nif:free_pact_handle(PactRef)
-    end.
+    pactffi_nif:free_pact_handle(PactRef).
 
 %% Internal functions
 

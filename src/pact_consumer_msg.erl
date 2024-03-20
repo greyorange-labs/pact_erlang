@@ -1,9 +1,7 @@
 -module(pact_consumer_msg).
 
 -export([
-    v4/2,
-    interaction/2,
-    cleanup_interaction/1
+    interaction/2
 ]).
 
 -type pact_ref() :: integer().
@@ -14,11 +12,6 @@
 -type pact_interaction_details() :: map().
 -type message() :: map().
 
--spec v4(consumer(), provider()) -> pact_pid().
-v4(Consumer, Provider) ->
-    {ok, PactPid} = pact_ref_server:start(Consumer, Provider),
-    PactPid.
-
 -spec interaction(pact_pid(), pact_interaction_details()) ->
     message().
 interaction(PactPid, Interaction) ->
@@ -26,11 +19,6 @@ interaction(PactPid, Interaction) ->
     Message = maps:get(with_contents, Interaction, #{}),
     ok = insert_contents(InteractionRef, Message),
     pactffi_nif:get_reified_message(InteractionRef).
-
--spec cleanup_interaction(pact_pid()) -> ok.
-cleanup_interaction(PactPid) ->
-    PactRef = pact_ref_server:get_pact_ref(PactPid),
-    pactffi_nif:free_pact_handle(PactRef).
 
 %% Internal functions
 
@@ -54,14 +42,13 @@ init_interaction(PactPid, Interaction) ->
                 undefined ->
                     pactffi_nif:msg_given(InteractionRef, ProviderState);
                 _ ->
-                    DecodedStateJson = pact_consumer:decode_value(StateJson),
                     maps:foreach(
                         fun(Key, Value) ->
                             pactffi_nif:msg_given_with_param(
                                 InteractionRef, ProviderState, Key, Value
                             )
                         end,
-                        DecodedStateJson
+                        StateJson
                     )
             end
     end,
