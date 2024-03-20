@@ -722,7 +722,7 @@ static ErlNifFunc nif_funcs[] =
         {"given_with_params", 3, given_with_params},
         {"new_msg_interaction", 2, new_msg_interaction},
         {"msg_given", 2, msg_given},
-        {"msg_given_with_param", 3, msg_given_with_param},
+        {"msg_given_with_param", 4, msg_given_with_param},
         {"msg_with_contents", 3, msg_with_contents},
         {"reify_message", 1, reify_message},
         {"schedule_async_verify", 11, schedule_async_verify}
