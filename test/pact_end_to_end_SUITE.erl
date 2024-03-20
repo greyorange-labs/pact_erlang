@@ -1,4 +1,4 @@
--module(pact_end_to_end).
+-module(pact_end_to_end_SUITE).
 -compile(nowarn_export_all).
 -compile(export_all).
 
@@ -181,19 +181,17 @@ search_animals(Config) ->
     pact:write(PactRef).
 
 verify_producer(_Config) ->
-    {ok, Port, Pid} = animal_service:start(0),
-    Cmd = "docker run --network host --rm -v ./pacts:/pacts "
-            "-e PACT_DO_NOT_TRACK=true "
-            "pactfoundation/pact-ref-verifier --full-log -l warn "
-            "-s http://localhost:" ++ integer_to_list(Port) ++ "/pactStateChange "
-            "-d /pacts -n animal_service -p " ++ integer_to_list(Port),
-    {RetCode, Output} = run_cmd(Cmd),
-    ct:print("===> Provider Verification Output: ~n~s", [Output]),
-    ?assertEqual(0, RetCode),
-    animal_service:stop(Pid).
-
-run_cmd(Cmd) ->
-    Res = os:cmd(Cmd ++ "\nRET_CODE=$?\necho \"\n$RET_CODE\""),
-    [[], RetCode | Rest] = lists:reverse(string:split(Res, "\n", all)),
-    Result = lists:join("\n", lists:reverse(Rest)),
-    {list_to_integer(RetCode), Result}.
+    {ok, Port} = animal_service:start(0),
+    Name = <<"animal_service">>,
+    Version =  <<"default">>,
+    Scheme = <<"http">>,
+    Host = <<"localhost">>,
+    Path = <<"/">>,
+    Branch = <<"develop">>,
+    FilePath = <<"./pacts">>,
+    Protocol = <<"http">>,
+    ok = pactffi_nif:verify_file_pacts(Name, Scheme, Host, Port, Path, Version, Branch, FilePath, Protocol, self(), list_to_binary("http://localhost:" ++ integer_to_list(Port) ++ "/pactStateChange")),
+    receive X ->
+        ?assertEqual(0, X)
+    end,
+    animal_service:stop().

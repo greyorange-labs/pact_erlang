@@ -79,7 +79,6 @@ handle_post_request(Req, State) ->
             api_404(Req, State)
     end.
 
-
 generate_weather_message(Req, State) ->
     ct:pal("IN APIIIIII"),
     {ok, Body, Request} = cowboy_req:read_body(Req),
@@ -90,7 +89,6 @@ generate_weather_message(Req, State) ->
     Message = erlang:apply(test_weather_api_handler, generate_message, ArgsList),
     respond_with_status_code(200, thoas:encode(Message), Request, State).
 
-
 generate_message(Temperature, WindSpeed, Humidity) ->
     #{
         <<"weather">> => #{
@@ -98,9 +96,10 @@ generate_message(Temperature, WindSpeed, Humidity) ->
             <<"humidity">> => Humidity,
             <<"wind_speed_kmh">> => WindSpeed
         },
-        <<"timestamp">> => list_to_binary(calendar:system_time_to_rfc3339(erlang:system_time(second)))
+        <<"timestamp">> => list_to_binary(
+            calendar:system_time_to_rfc3339(erlang:system_time(second))
+        )
     }.
-
 
 given_args_mapping(Given) ->
     case Given of

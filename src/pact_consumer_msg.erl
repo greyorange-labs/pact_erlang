@@ -32,7 +32,6 @@ cleanup_interaction(PactPid) ->
     PactRef = pact_ref_server:get_pact_ref(PactPid),
     pactffi_nif:free_pact_handle(PactRef).
 
-
 %% Internal functions
 
 -spec init_interaction(pact_pid(), pact_interaction_details()) ->
@@ -58,7 +57,9 @@ init_interaction(PactPid, Interaction) ->
                     DecodedStateJson = pact_consumer:decode_value(StateJson),
                     maps:foreach(
                         fun(Key, Value) ->
-                            pactffi_nif:msg_given_with_param(InteractionRef, ProviderState, Key, Value)
+                            pactffi_nif:msg_given_with_param(
+                                InteractionRef, ProviderState, Key, Value
+                            )
                         end,
                         DecodedStateJson
                     )

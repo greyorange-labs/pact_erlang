@@ -48,7 +48,6 @@ cleanup(PactPid) ->
     pact_consumer_http:cleanup_interaction(PactPid),
     pact_ref_server:stop(PactPid).
 
-
 %% Internal Functions
 
 -spec encode_value(map() | binary()) -> binary().

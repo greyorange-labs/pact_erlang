@@ -662,100 +662,40 @@ static ERL_NIF_TERM verify_via_file(ErlNifEnv *env, int argc, const ERL_NIF_TERM
     verifierhandle = pactffi_verifier_new_for_application(name, version);
     pactffi_verifier_set_provider_info(verifierhandle, name, scheme, host, port, path);
     pactffi_verifier_add_provider_transport(verifierhandle, protocol, port, path, scheme);
+    if (!enif_is_binary(env, argv[10]))
+    {
+        return enif_make_badarg(env);
+    }
+
+    char *state_path = convert_erl_binary_to_c_string(env, argv[10]);
+    if (state_path[0] != '\0')
+    {
+        pactffi_verifier_set_provider_state(verifierhandle, state_path, 0, 1);
+    }
     pactffi_verifier_set_verification_options(verifierhandle, 0, 5000),
     pactffi_verifier_set_publish_options(verifierhandle, version, NULL, NULL, -1, branch);
     pactffi_verifier_add_directory_source(verifierhandle, file_path);
+    setenv("PACT_DO_NOT_TRACK", "true", 1);
     int output = pactffi_verifier_execute(verifierhandle);
     pactffi_verifier_shutdown(verifierhandle);
 
-    return enif_make_int(env, output);
+
+    ErlNifPid pid;
+
+    enif_get_local_pid(env, argv[9], &pid);
+
+    ERL_NIF_TERM message = enif_make_int(env, output);
+
+    enif_send(env, &pid, NULL, message);
+
+    return enif_make_atom(env, "ok");
 }
 
-// static ERL_NIF_TERM verifier_set_provider_state(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-// {
-//     if (!enif_is_number(env, argv[0]))
-//     {
-//         return enif_make_badarg(env);
-//     }
-//     int verifier_ref = convert_erl_int_to_c_int(env, argv[0]);
-//     struct VerifierHandle *verifierhandle = verifier_ref;
-//     if (!enif_is_binary(env, argv[1]))
-//     {
-//         return enif_make_badarg(env);
-//     }
-//     char *url = convert_erl_binary_to_c_string(env, argv[1]);
-//     if (!enif_is_number(env, argv[2]))
-//     {
-//         return enif_make_badarg(env);
-//     }
-//     int teardown = convert_erl_int_to_c_int(env, argv[2]);
-//     if (!enif_is_number(env, argv[3]))
-//     {
-//         return enif_make_badarg(env);
-//     }
-//     int body = convert_erl_int_to_c_int(env, argv[3]);
 
-//     pactffi_verifier_set_provider_state(*verifierhandle, url, teardown, body);
-//     return enif_make_atom(env, "ok");
-// }
-
-// static ERL_NIF_TERM verifier_add_broker(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-// {
-//     if (!enif_is_number(env, argv[0]))
-//     {
-//         return enif_make_badarg(env);
-//     }
-//     int verifier_ref = convert_erl_int_to_c_int(env, argv[0]);
-//     struct VerifierHandle *verifierhandle = verifier_ref;
-//     if (!enif_is_binary(env, argv[1]))
-//     {
-//         return enif_make_badarg(env);
-//     }
-//     char *url = convert_erl_binary_to_c_string(env, argv[1]);
-
-//     if (!enif_is_binary(env, argv[2]))
-//     {
-//         return enif_make_badarg(env);
-//     }
-//     char *username = convert_erl_binary_to_c_string(env, argv[2]);
-
-//     if (!enif_is_binary(env, argv[3]))
-//     {
-//         return enif_make_badarg(env);
-//     }
-//     char *password = convert_erl_binary_to_c_string(env, argv[3]);
-
-//     // TODO: give token option
-
-//     if (!enif_is_number(env, argv[4]))
-//     {
-//         return enif_make_badarg(env);
-//     }
-//     int enable_pending_pacts = convert_erl_int_to_c_int(env, argv[4]);
-
-//     if (!enif_is_binary(env, argv[5]))
-//     {
-//         return enif_make_badarg(env);
-//     }
-//     char *providerbranch = convert_erl_binary_to_c_string(env, argv[5]);
-
-
-//     if (!enif_is_binary(env, argv[6]))
-//     {
-//         return enif_make_badarg(env);
-//     }
-//     char *consumer_version_selectors = convert_erl_binary_to_c_string(env, argv[6]);
-
-//     if (!enif_is_number(env, argv[7]))
-//     {
-//         return enif_make_badarg(env);
-//     }
-//     int *consumer_version_selectors_len = convert_erl_int_to_c_int(env, argv[7]);
-
-
-//     pactffi_verifier_broker_source_with_selectors(verifierhandle, url, username, password, NULL, enable_pending_pacts, NULL, NULL, NULL, providerbranch, consumer_version_selectors, consumer_version_selectors_len, NULL, NULL);
-//     return enif_make_atom(env, "ok");
-// }
+static ERL_NIF_TERM schedule_async_verify(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+    // ERL_NIF_DIRTY_JOB_IO_BOUND
+    return enif_schedule_nif(env, "verify_via_file", ERL_NIF_DIRTY_JOB_IO_BOUND, verify_via_file, argc, argv);
+}
 
 static ErlNifFunc nif_funcs[] =
     {
@@ -785,16 +725,7 @@ static ErlNifFunc nif_funcs[] =
         {"msg_given_with_param", 3, msg_given_with_param},
         {"msg_with_contents", 3, msg_with_contents},
         {"reify_message", 1, reify_message},
-        // {"new_verifier", 2, new_verifier},
-        // {"verifier_set_provider_info", 6, verifier_set_provider_info},
-        // {"verifier_add_provider_transport", 5, verifier_add_provider_transport},
-        // {"verifier_set_provider_state", 4, verifier_set_provider_state},
-        // {"verifier_set_publish_options", 3, verifier_set_publish_options},
-        // {"verifier_add_file_source", 2, verifier_add_file_source},
-        // {"verifier_add_broker", 8, verifier_add_broker},
-        // {"verifier_execute", 1, verifier_execute},
-        // {"verifier_shutdown", 1, verifier_shutdown},
-        {"verify_via_file", 9, verify_via_file}
+        {"schedule_async_verify", 11, schedule_async_verify}
     };
 
 ERL_NIF_INIT(pactffi_nif, nif_funcs, NULL, NULL, NULL, NULL)

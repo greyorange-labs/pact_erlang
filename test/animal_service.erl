@@ -4,7 +4,7 @@
 -export([
     start/0,
     start/1,
-    stop/1,
+    stop/0,
     do/1,
     process_weather_data/1
 ]).
@@ -20,11 +20,10 @@ start(Port) ->
     {ok, Pid} = inets:start(httpd, [{bind_address, "127.0.0.1"}, {port, Port}, {server_name, "animal_service"}, {server_root, "./"}, {document_root, "./"}, {modules, [animal_service]}]),
     Info = httpd:info(Pid),
     {port, ListenPort} = lists:keyfind(port, 1, Info),
-    {ok, ListenPort, Pid}.
+    {ok, ListenPort}.
 
-stop(Pid) ->
+stop() ->
     catch ets:delete(?TABLE_NAME),
-    inets:stop(httpd, Pid),
     inets:stop().
 
 create_table() ->
