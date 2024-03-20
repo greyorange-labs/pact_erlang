@@ -196,6 +196,7 @@ verify_file_pacts(
     ok = schedule_async_verify(
         Name, Scheme, Host, Port, Path, Version, Branch, FilePath, Protocol, Pid, StatePath
     ),
-    receive Output ->
-        Output
+    receive
+        Output ->
+            Output
     end.
