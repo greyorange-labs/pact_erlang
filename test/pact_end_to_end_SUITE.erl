@@ -5,7 +5,7 @@
 -include_lib("stdlib/include/assert.hrl").
 -include_lib("common_test/include/ct.hrl").
 
-all() -> [{group, consumer}, {group, producer}].
+all() -> [{group, consumer},{group, producer}].
 
 groups() ->
     [
@@ -153,7 +153,6 @@ create_animal(Config) ->
 
 search_animals(Config) ->
     PactRef = ?config(pact_ref, Config),
-    AnimalObj = #{<<"name">> => <<"Mary">>, <<"type">> => <<"alligator">>},
     Result = #{<<"animals">> => [#{<<"name">> => <<"Mary">>, <<"type">> => <<"alligator">>}]},
     Query = #{<<"type">> => <<"alligator">>},
     {ok, Port} = pact:interaction(PactRef,
@@ -180,18 +179,15 @@ search_animals(Config) ->
 
 verify_producer(_Config) ->
     {ok, Port} = animal_service:start(0),
-    Cmd = "docker run --network host --rm -v ./pacts:/pacts "
-            "-e PACT_DO_NOT_TRACK=true "
-            "pactfoundation/pact-ref-verifier --full-log -l warn "
-            "-s http://localhost:" ++ integer_to_list(Port) ++ "/pactStateChange "
-            "-d /pacts -n animal_service -p " ++ integer_to_list(Port),
-    {RetCode, Output} = run_cmd(Cmd),
-    ct:print("===> Provider Verification Output: ~n~s", [Output]),
-    ?assertEqual(0, RetCode),
+    Name = <<"animal_service">>,
+    Version =  <<"default">>,
+    Scheme = <<"http">>,
+    Host = <<"localhost">>,
+    Path = <<"/">>,
+    Branch = <<"develop">>,
+    FilePath = <<"./pacts">>,
+    Protocol = <<"http">>,
+    StateChangePath = list_to_binary("http://localhost:" ++ integer_to_list(Port) ++ "/pactStateChange"),
+    Output = pactffi_nif:verify_file_pacts(Name, Scheme, Host, Port, Path, Version, Branch, FilePath, Protocol, self(), StateChangePath),
+    ?assertEqual(0, Output),
     animal_service:stop().
-
-run_cmd(Cmd) ->
-    Res = os:cmd(Cmd ++ "\nRET_CODE=$?\necho \"\n$RET_CODE\""),
-    [[], RetCode | Rest] = lists:reverse(string:split(Res, "\n", all)),
-    Result = lists:join("\n", lists:reverse(Rest)),
-    {list_to_integer(RetCode), Result}.

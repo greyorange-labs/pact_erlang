@@ -27,7 +27,14 @@
     free_pact_handle/1,
     with_query_parameter_v2/4,
     given/2,
-    given_with_params/3
+    given_with_params/3,
+    new_msg_interaction/2,
+    msg_given/2,
+    msg_given_with_param/4,
+    msg_with_contents/3,
+    reify_message/1,
+    get_reified_message/1,
+    verify_file_pacts/11
 ]).
 
 % Import the NIF functions from the C library
@@ -52,7 +59,13 @@
     free_pact_handle/1,
     with_query_parameter_v2/4,
     given/2,
-    given_with_params/3
+    given_with_params/3,
+    new_msg_interaction/2,
+    msg_given/2,
+    msg_given_with_param/4,
+    msg_with_contents/3,
+    reify_message/1,
+    schedule_async_verify/11
 ]).
 -on_load(init/0).
 
@@ -66,6 +79,18 @@ get_mismatches(MockServerPort) ->
         Json ->
             {ok, Mismatches} = thoas:decode(Json),
             Mismatches
+    end.
+
+%% Non-NIF functions (mostly just wrappers around NIF functions)
+%% @doc Returns reified message contents
+-spec get_reified_message(integer()) -> [] | thoas:json_term().
+get_reified_message(InteractionHandle) ->
+    case pactffi_nif:reify_message(InteractionHandle) of
+        {error, _} ->
+            [];
+        {ok, Json} ->
+            {ok, ReifiedMessage} = thoas:decode(Json),
+            ReifiedMessage
     end.
 
 % Load the NIF library
@@ -137,3 +162,32 @@ given(_, _) ->
 
 given_with_params(_, _, _) ->
     erlang:nif_error("NIF library not loaded").
+
+new_msg_interaction(_, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+msg_given(_, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+msg_given_with_param(_, _, _, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+msg_with_contents(_, _, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+reify_message(_) ->
+    erlang:nif_error("NIF library not loaded").
+
+schedule_async_verify(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11) ->
+    erlang:nif_error("NIF library not loaded").
+
+verify_file_pacts(
+    Name, Scheme, Host, Port, Path, Version, Branch, FilePath, Protocol, Pid, StatePath
+) ->
+    ok = schedule_async_verify(
+        Name, Scheme, Host, Port, Path, Version, Branch, FilePath, Protocol, Pid, StatePath
+    ),
+    receive
+        Output ->
+            Output
+    end.

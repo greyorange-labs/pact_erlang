@@ -5,7 +5,8 @@
     start/0,
     start/1,
     stop/0,
-    do/1
+    do/1,
+    process_weather_data/1
 ]).
 
 -define(TABLE_NAME, animals).
@@ -16,7 +17,7 @@ start() ->
 start(Port) ->
     {ok, _} = application:ensure_all_started(inets),
     create_table(),
-    {ok, Pid} = inets:start(httpd, [{port, Port}, {server_name, "animal_service"}, {server_root, "./"}, {document_root, "./"}, {modules, [animal_service]}]),
+    {ok, Pid} = inets:start(httpd, [{bind_address, "127.0.0.1"}, {port, Port}, {server_name, "animal_service"}, {server_root, "./"}, {document_root, "./"}, {modules, [animal_service]}]),
     Info = httpd:info(Pid),
     {port, ListenPort} = lists:keyfind(port, 1, Info),
     {ok, ListenPort}.
@@ -124,3 +125,16 @@ make_json_response(Code, Body) ->
 
 make_404_response() ->
     make_json_response(404, #{error => not_found}).
+
+process_weather_data(Payload) ->
+    #{
+        <<"weather">> := #{
+            <<"temperature">> := _Temp,
+            <<"humidity">> := _Humidity,
+            <<"wind_speed_kmh">> := _WindSpeed
+        },
+        <<"timestamp">> := _TimeStamp
+    } = Payload,
+    %% Do something with weather data like validation,
+    %% Db update
+    ok.
