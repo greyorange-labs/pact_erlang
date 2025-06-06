@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Introduced support for writing consumer/provider message pact tests
 - Introduced support for pact verification
 - Added support for checking pact verification logs
+- Added support for Erlang/OTP 27 and 28
 
 
 ## [0.2.2] - 2023-11-03
