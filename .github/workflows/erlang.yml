@@ -14,11 +14,16 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
-        otp_version: ['25', '26']
+        otp_version: ['26', '27', '28']
+        rebar3_version: ['3.25.0']
+        include:
+          - otp_version: '25'
+            rebar3_version: '3.24.0'
 
     env:
-      LATEST_OTP_RELEASE: 26
+      LATEST_OTP_RELEASE: 28
 
     steps:
     - uses: actions/checkout@v3
@@ -26,7 +31,7 @@ jobs:
       uses: erlef/setup-beam@v1
       with:
         otp-version: ${{ matrix.otp_version }}
-        rebar3-version: '3.22.1'
+        rebar3-version: ${{ matrix.rebar3_version }}
     - name: Deps cache
       id: cache-deps
       uses: actions/cache@v3
