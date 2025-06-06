@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [0.3.0] - 2025-06-05
 
 ### Added
 
@@ -14,6 +14,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Introduced support for pact verification
 - Added support for checking pact verification logs
 - Added support for Erlang/OTP 27 and 28
+
+### Deprecated
+
+- Erlang/OTP 25 is still supported, but will be removed in the 0.4.0 release
 
 
 ## [0.2.2] - 2023-11-03
