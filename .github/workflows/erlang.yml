@@ -83,3 +83,5 @@ jobs:
         restore-keys: ${{ runner.os }}-deps-
     - name: Compile
       run: make
+    - name: Run tests
+      run: make test
