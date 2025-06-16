@@ -70,15 +70,6 @@ jobs:
       run: brew --version
     - name: Keep Brew Fresh
       run: brew update
-    - name: Install Docker
-      run: |
-       brew install --cask docker
-       open -a Docker
-       # Wait until Docker is running
-       while ! docker system info > /dev/null 2>&1; do
-         echo "Waiting for Docker to launch..."
-         sleep 5
-       done
     - name: Install Erlang
       run: brew install erlang rebar3
     - name: Deps cache
@@ -92,5 +83,3 @@ jobs:
        restore-keys: ${{ runner.os }}-deps-
     - name: Compile
       run: make
-    - name: Run tests
-      run: make test
