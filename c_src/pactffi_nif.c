@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 static const char *const * binary_to_char_array(ErlNifEnv* env, const ERL_NIF_TERM binary_term) {
     ErlNifBinary binary;
@@ -815,60 +817,95 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
     int consumer_version_selectors_len = convert_erl_int_to_c_int(env, argv[12]);
     char *protocol = convert_erl_binary_to_c_string(env, argv[13]);
     char *state_path = convert_erl_binary_to_c_string(env, argv[14]);
+    char *exec_path = convert_erl_binary_to_c_string(env, argv[15]);
 
-    char port_buf[16], enable_pending_buf[8], selectors_len_buf[16];
-    snprintf(port_buf, sizeof(port_buf), "%d", port);
-    snprintf(enable_pending_buf, sizeof(enable_pending_buf), "%d", enable_pending);
-    snprintf(selectors_len_buf, sizeof(selectors_len_buf), "%d", consumer_version_selectors_len);
+    // Create a temp file for config in the current working directory
+    char config_file_template[256];
+    snprintf(config_file_template, sizeof(config_file_template), "pact_config_XXXXXX");
+    int config_fd = mkstemp(config_file_template);
+    if (config_fd == -1) {
+        enif_free(name); enif_free(scheme); enif_free(host); enif_free(path);
+        enif_free(version); enif_free(branch); enif_free(broker_url);
+        enif_free(broker_username); enif_free(broker_password);
+        enif_free(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
+        return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_string(env, "mkstemp_config_failed", ERL_NIF_LATIN1));
+    }
 
-    #define ENV_COUNT 16
-    char *env_vars[ENV_COUNT + 1];
-    int idx = 0;
-    #define SETENV_STR(key, val) do { \
-        size_t sz = strlen(key) + strlen(val) + 2; \
-        env_vars[idx] = malloc(sz); \
-        snprintf(env_vars[idx++], sz, "%s=%s", key, val); \
-    } while(0)
-    SETENV_STR("PACT_NAME", name);
-    SETENV_STR("PACT_SCHEME", scheme);
-    SETENV_STR("PACT_HOST", host);
-    SETENV_STR("PACT_PORT", port_buf);
-    SETENV_STR("PACT_PATH", path);
-    SETENV_STR("PACT_VERSION", version);
-    SETENV_STR("PACT_BRANCH", branch);
-    SETENV_STR("PACT_BROKER_URL", broker_url);
-    SETENV_STR("PACT_BROKER_USERNAME", broker_username);
-    SETENV_STR("PACT_BROKER_PASSWORD", broker_password);
-    SETENV_STR("PACT_ENABLE_PENDING", enable_pending_buf);
-    SETENV_STR("PACT_PROTOCOL", protocol);
-    SETENV_STR("PACT_STATE_PATH", state_path);
-    SETENV_STR("CONSUMER_VERSION_SELECTORS", consumer_version_selectors);
-    SETENV_STR("CONSUMER_VERSION_SELECTORS_LEN", selectors_len_buf);
-    env_vars[idx] = NULL;
+    // Write config as key=value pairs (one per line)
+    dprintf(config_fd, "PACT_NAME=%s\n", name);
+    dprintf(config_fd, "PACT_SCHEME=%s\n", scheme);
+    dprintf(config_fd, "PACT_HOST=%s\n", host);
+    dprintf(config_fd, "PACT_PORT=%d\n", port);
+    dprintf(config_fd, "PACT_PATH=%s\n", path);
+    dprintf(config_fd, "PACT_VERSION=%s\n", version);
+    dprintf(config_fd, "PACT_BRANCH=%s\n", branch);
+    dprintf(config_fd, "PACT_BROKER_URL=%s\n", broker_url);
+    dprintf(config_fd, "PACT_BROKER_USERNAME=%s\n", broker_username);
+    dprintf(config_fd, "PACT_BROKER_PASSWORD=%s\n", broker_password);
+    dprintf(config_fd, "PACT_ENABLE_PENDING=%d\n", enable_pending);
+    dprintf(config_fd, "PACT_PROTOCOL=%s\n", protocol);
+    dprintf(config_fd, "PACT_STATE_PATH=%s\n", state_path);
+    dprintf(config_fd, "CONSUMER_VERSION_SELECTORS=%s\n", consumer_version_selectors);
+    dprintf(config_fd, "CONSUMER_VERSION_SELECTORS_LEN=%d\n", consumer_version_selectors_len);
+    close(config_fd);
 
-    char *exec_path = "/Users/priyaranjan.m/Work/oss/pact_erlang/c_src/pact_verifier_exec";
+    // Create a temp file for result in the current working directory
+    char result_file_template[256];
+    snprintf(result_file_template, sizeof(result_file_template), "pact_result_XXXXXX");
+    int result_fd = mkstemp(result_file_template);
+    if (result_fd == -1) {
+        unlink(config_file_template);
+        enif_free(name); enif_free(scheme); enif_free(host); enif_free(path);
+        enif_free(version); enif_free(branch); enif_free(broker_url);
+        enif_free(broker_username); enif_free(broker_password);
+        enif_free(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
+        return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_string(env, "mkstemp_result_failed", ERL_NIF_LATIN1));
+    }
+    close(result_fd);
+
+    // Pass config and result file paths via environment variables
+    char *envp[3];
+    size_t sz1 = strlen("PACT_CONFIG_FILE=") + strlen(config_file_template) + 1;
+    size_t sz2 = strlen("PACT_RESULT_FILE=") + strlen(result_file_template) + 1;
+    envp[0] = malloc(sz1);
+    envp[1] = malloc(sz2);
+    snprintf(envp[0], sz1, "PACT_CONFIG_FILE=%s", config_file_template);
+    snprintf(envp[1], sz2, "PACT_RESULT_FILE=%s", result_file_template);
+    envp[2] = NULL;
+
     char *const argv_exec[] = {exec_path, NULL};
 
     pid_t pid = fork();
     if (pid == 0) {
-        execve(exec_path, argv_exec, env_vars);
+        execve(exec_path, argv_exec, envp);
         perror("execve failed");
         exit(127);
     } else if (pid > 0) {
         int status;
         waitpid(pid, &status, 0);
-        for (int i = 0; i < ENV_COUNT; ++i) free(env_vars[i]);
+        // Read result from file
+        int verification_output = -1;
+        FILE *fp = fopen(result_file_template, "r");
+        if (fp) {
+            if (fscanf(fp, "%d", &verification_output) != 1) {
+                verification_output = -1;
+            }
+            fclose(fp);
+            unlink(result_file_template);
+        }
+        unlink(config_file_template);
+        free(envp[0]);
+        free(envp[1]);
         enif_free(name); enif_free(scheme); enif_free(host); enif_free(path);
         enif_free(version); enif_free(branch); enif_free(broker_url);
         enif_free(broker_username); enif_free(broker_password);
         enif_free(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
-        if (WIFEXITED(status)) {
-            return enif_make_int(env, WEXITSTATUS(status));
-        } else {
-            return enif_make_atom(env, "error");
-        }
+        return enif_make_int(env, verification_output);
     } else {
-        for (int i = 0; i < ENV_COUNT; ++i) free(env_vars[i]);
+        free(envp[0]);
+        free(envp[1]);
+        unlink(config_file_template);
+        unlink(result_file_template);
         enif_free(name); enif_free(scheme); enif_free(host); enif_free(path);
         enif_free(version); enif_free(branch); enif_free(broker_url);
         enif_free(broker_username); enif_free(broker_password);
@@ -907,7 +944,7 @@ static ErlNifFunc nif_funcs[] =
         {"reify_message", 1, reify_message},
         {"verify_via_file_direct", 10, verify_via_file_direct, ERL_NIF_DIRTY_JOB_IO_BOUND},
         {"verify_via_broker_direct", 15, verify_via_broker_direct, ERL_NIF_DIRTY_JOB_IO_BOUND},
-        {"verify_via_broker_external", 15, verify_via_broker_external, ERL_NIF_DIRTY_JOB_IO_BOUND }
+        {"verify_via_broker_external", 16, verify_via_broker_external, ERL_NIF_DIRTY_JOB_IO_BOUND }
     };
 
 ERL_NIF_INIT(pactffi_nif, nif_funcs, NULL, NULL, NULL, NULL)

@@ -40,7 +40,14 @@ TARGET := $(BASEDIR)/priv/libpact_ffi.so
 LIBRARY_PATH := $(LIBRARY_BASE_PATH)/$(PACT_FILE_NAME)
 PACT_VERSION_FILE := $(LIBRARY_BASE_PATH)/.pact-ffi-version-$(PACT_FFI_VERSION)
 
+PVER_EXEC_SRC := pact_verifier_exec.c
+PVER_EXEC_BIN := $(LIBRARY_BASE_PATH)/pact_verifier_exec
+
+ifeq ($(UNAME),Linux)
+all: $(TARGET) $(PVER_EXEC_BIN) compile_commands.json
+else
 all: $(TARGET) compile_commands.json
+endif
 	@:
 
 # Generate compile_commands.json without using external commands
@@ -53,6 +60,11 @@ compile_commands.json: Makefile
 
 $(TARGET): $(SRC) $(LIBRARY_PATH)
 	@$(CC) $(CFLAGS) $(TARGET) $(SRC) -I$(ERTS_INCLUDE_DIR) -I$(PACT_INCLUDE_PATH) $(LIBRARY_PATH)
+
+ifeq ($(UNAME),Linux)
+$(PVER_EXEC_BIN): $(PVER_EXEC_SRC) $(LIBRARY_PATH)
+	@$(CC) -o $(PVER_EXEC_BIN) ../c_src/$(PVER_EXEC_SRC) -I../c_src/include $(LIBRARY_PATH) -lm
+endif
 
 $(LIBRARY_PATH): $(PACT_VERSION_FILE)
 	@mkdir -p $(LIBRARY_BASE_PATH)
