@@ -220,15 +220,44 @@ verify_broker_pacts(
     TotalConsumerVersionSelectors = 0,
     case os:type() of
         {unix, linux} ->
-            ExternalHelperPath = list_to_binary(code:priv_dir(pact_erlang) ++ "/pact_verifier_exec"),
+            ExternalHelperPath = list_to_binary(
+                code:priv_dir(pact_erlang) ++ "/pact_verifier_exec"
+            ),
             verify_via_broker_external(
-                Name, Scheme, Host, Port, BaseUrl, Version, Branch, BrokerUrl, BrokerUser, BrokerPassword,
-                EnablePending, ConsumerVersionSelectors, TotalConsumerVersionSelectors, Protocol, StatePath, ExternalHelperPath
+                Name,
+                Scheme,
+                Host,
+                Port,
+                BaseUrl,
+                Version,
+                Branch,
+                BrokerUrl,
+                BrokerUser,
+                BrokerPassword,
+                EnablePending,
+                ConsumerVersionSelectors,
+                TotalConsumerVersionSelectors,
+                Protocol,
+                StatePath,
+                ExternalHelperPath
             );
         {unix, darwin} ->
             verify_via_broker_direct(
-                Name, Scheme, Host, Port, BaseUrl, Version, Branch, BrokerUrl, BrokerUser, BrokerPassword,
-                EnablePending, ConsumerVersionSelectors, TotalConsumerVersionSelectors, Protocol, StatePath
+                Name,
+                Scheme,
+                Host,
+                Port,
+                BaseUrl,
+                Version,
+                Branch,
+                BrokerUrl,
+                BrokerUser,
+                BrokerPassword,
+                EnablePending,
+                ConsumerVersionSelectors,
+                TotalConsumerVersionSelectors,
+                Protocol,
+                StatePath
             );
         _ ->
             erlang:error({unsupported_os, os:type()})
