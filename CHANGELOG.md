@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - **[Important Bugfix]** Unable to verify pacts ([#32](https://github.com/greyorange-labs/pact_erlang/issues/32))
+- Upgraded to pact ffi version 0.4.27. Note: Existing pacts in the pact broker may cause version conflicts due to schema changes. Users are advised to update their existing pacts to align with the new version or remove outdated pacts from the broker to avoid issues.
 
 ## [0.3.0] - 2025-06-05
 

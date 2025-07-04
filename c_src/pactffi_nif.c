@@ -900,6 +900,7 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
         enif_free(version); enif_free(branch); enif_free(broker_url);
         enif_free(broker_username); enif_free(broker_password);
         enif_free(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
+        enif_free(exec_path);
         return enif_make_int(env, verification_output);
     } else {
         free(envp[0]);
@@ -910,6 +911,7 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
         enif_free(version); enif_free(branch); enif_free(broker_url);
         enif_free(broker_username); enif_free(broker_password);
         enif_free(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
+        enif_free(exec_path);
         return enif_make_atom(env, "error");
     }
 }
