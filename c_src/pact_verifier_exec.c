@@ -66,8 +66,24 @@ int main() {
     printf("CONSUMER_VERSION_SELECTORS=%s\n", consumer_version_selectors);
     printf("CONSUMER_VERSION_SELECTORS_LEN=%s\n", consumer_version_selectors_len_str);
 
-    if (!name[0] || !scheme[0] || !host[0] || !port_str[0] || !path[0] || !version[0] || !branch[0] || !broker_url[0] || !broker_username[0] || !broker_password[0] || !enable_pending_str[0] || !protocol[0] || !state_path[0] || !consumer_version_selectors[0] || !consumer_version_selectors_len_str[0]) {
-        fprintf(stderr, "Missing required config variable(s)\n");
+    if (!name[0] || !scheme[0] || !host[0] || !port_str[0] || !path[0] || !version[0] || !branch[0] || !broker_url[0] || !broker_username[0] || !broker_password[0] || !enable_pending_str[0] || !protocol[0] || !consumer_version_selectors[0] || !consumer_version_selectors_len_str[0]) {
+        fprintf(stderr, "Missing required config variable(s): ");
+        int first = 1;
+        if (!name[0]) { fprintf(stderr, "%sname", first ? "" : ", "); first = 0; }
+        if (!scheme[0]) { fprintf(stderr, "%sscheme", first ? "" : ", "); first = 0; }
+        if (!host[0]) { fprintf(stderr, "%shost", first ? "" : ", "); first = 0; }
+        if (!port_str[0]) { fprintf(stderr, "%sport", first ? "" : ", "); first = 0; }
+        if (!path[0]) { fprintf(stderr, "%spath", first ? "" : ", "); first = 0; }
+        if (!version[0]) { fprintf(stderr, "%sversion", first ? "" : ", "); first = 0; }
+        if (!branch[0]) { fprintf(stderr, "%sbranch", first ? "" : ", "); first = 0; }
+        if (!broker_url[0]) { fprintf(stderr, "%sbroker_url", first ? "" : ", "); first = 0; }
+        if (!broker_username[0]) { fprintf(stderr, "%sbroker_username", first ? "" : ", "); first = 0; }
+        if (!broker_password[0]) { fprintf(stderr, "%sbroker_password", first ? "" : ", "); first = 0; }
+        if (!enable_pending_str[0]) { fprintf(stderr, "%senable_pending", first ? "" : ", "); first = 0; }
+        if (!protocol[0]) { fprintf(stderr, "%sprotocol", first ? "" : ", "); first = 0; }
+        if (!consumer_version_selectors[0]) { fprintf(stderr, "%sconsumer_version_selectors", first ? "" : ", "); first = 0; }
+        if (!consumer_version_selectors_len_str[0]) { fprintf(stderr, "%sconsumer_version_selectors_len", first ? "" : ", "); first = 0; }
+        fprintf(stderr, "\n");
         return 1;
     }
 
