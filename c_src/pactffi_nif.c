@@ -4,6 +4,10 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 static const char *const * binary_to_char_array(ErlNifEnv* env, const ERL_NIF_TERM binary_term) {
     ErlNifBinary binary;
@@ -641,210 +645,275 @@ static ERL_NIF_TERM with_query_parameter_v2(ErlNifEnv *env, int argc, const ERL_
 
 // Provider verifier functions
 
-static ERL_NIF_TERM verify_via_file(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+static ERL_NIF_TERM verify_via_file_direct(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    if (!enif_is_binary(env, argv[0]))
-    {
-        return enif_make_badarg(env);
-    }
+    // Extract all parameters
+    if (!enif_is_binary(env, argv[0])) return enif_make_badarg(env);
     char *name = convert_erl_binary_to_c_string(env, argv[0]);
-    if (!enif_is_binary(env, argv[1]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_binary(env, argv[1])) return enif_make_badarg(env);
     char *scheme = convert_erl_binary_to_c_string(env, argv[1]);
-    if (!enif_is_binary(env, argv[2]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_binary(env, argv[2])) return enif_make_badarg(env);
     char *host = convert_erl_binary_to_c_string(env, argv[2]);
-    if (!enif_is_number(env, argv[3]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_number(env, argv[3])) return enif_make_badarg(env);
     int port = convert_erl_int_to_c_int(env, argv[3]);
-    printf("Port is %d\n", port);
-    if (!enif_is_binary(env, argv[4]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_binary(env, argv[4])) return enif_make_badarg(env);
     char *path = convert_erl_binary_to_c_string(env, argv[4]);
-
-    if (!enif_is_binary(env, argv[5]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_binary(env, argv[5])) return enif_make_badarg(env);
     char *version = convert_erl_binary_to_c_string(env, argv[5]);
-
-    if (!enif_is_binary(env, argv[6]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_binary(env, argv[6])) return enif_make_badarg(env);
     char *branch = convert_erl_binary_to_c_string(env, argv[6]);
-
-    if (!enif_is_binary(env, argv[7]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_binary(env, argv[7])) return enif_make_badarg(env);
     char *file_path = convert_erl_binary_to_c_string(env, argv[7]);
-
-    if (!enif_is_binary(env, argv[8]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_binary(env, argv[8])) return enif_make_badarg(env);
     char *protocol = convert_erl_binary_to_c_string(env, argv[8]);
+    
+    if (!enif_is_binary(env, argv[9])) return enif_make_badarg(env);
+    char *state_path = convert_erl_binary_to_c_string(env, argv[9]);
 
-    struct VerifierHandle *verifierhandle;
-    verifierhandle = pactffi_verifier_new_for_application(name, version);
+    // Create verifier handle and configure it
+    struct VerifierHandle *verifierhandle = pactffi_verifier_new_for_application(name, version);
     pactffi_verifier_set_no_pacts_is_error(verifierhandle, 0);
     pactffi_verifier_set_provider_info(verifierhandle, name, scheme, host, port, path);
     pactffi_verifier_add_provider_transport(verifierhandle, protocol, port, path, scheme);
-    if (!enif_is_binary(env, argv[9]))
-    {
-        return enif_make_badarg(env);
-    }
-
-    char *state_path = convert_erl_binary_to_c_string(env, argv[9]);
-    if (state_path[0] != '\0')
-    {
+    
+    if (state_path[0] != '\0') {
         pactffi_verifier_set_provider_state(verifierhandle, state_path, 0, 1);
     }
-    pactffi_verifier_set_verification_options(verifierhandle, 0, 5000),
+    
+    pactffi_verifier_set_verification_options(verifierhandle, 0, 5000);
     pactffi_verifier_set_publish_options(verifierhandle, version, NULL, NULL, -1, branch);
     pactffi_verifier_add_directory_source(verifierhandle, file_path);
+    
     setenv("PACT_DO_NOT_TRACK", "true", 1);
+    
+    // Execute verification
     int output = pactffi_verifier_execute(verifierhandle);
+    
+    // Cleanup
     pactffi_verifier_shutdown(verifierhandle);
-
-
-    // ErlNifPid pid;
-
-    // enif_get_local_pid(env, argv[9], &pid);
-
-    // ERL_NIF_TERM message = enif_make_int(env, output);
-
-    // enif_send(env, &pid, NULL, message);
+    
+    // Free allocated strings
+    enif_free(name);
+    enif_free(scheme);
+    enif_free(host);
+    enif_free(path);
+    enif_free(version);
+    enif_free(branch);
+    enif_free(file_path);
+    enif_free(protocol);
+    enif_free(state_path);
 
     return enif_make_int(env, output);
 }
 
-static ERL_NIF_TERM verify_via_broker(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+static ERL_NIF_TERM verify_via_broker_direct(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    if (!enif_is_binary(env, argv[0]))
-    {
-        return enif_make_badarg(env);
-    }
+    // Extract all parameters (similar to existing verify_via_broker but with proper cleanup)
+    if (!enif_is_binary(env, argv[0])) return enif_make_badarg(env);
     char *name = convert_erl_binary_to_c_string(env, argv[0]);
-    if (!enif_is_binary(env, argv[1]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_binary(env, argv[1])) return enif_make_badarg(env);
     char *scheme = convert_erl_binary_to_c_string(env, argv[1]);
-    if (!enif_is_binary(env, argv[2]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_binary(env, argv[2])) return enif_make_badarg(env);
     char *host = convert_erl_binary_to_c_string(env, argv[2]);
-    if (!enif_is_number(env, argv[3]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_number(env, argv[3])) return enif_make_badarg(env);
     int port = convert_erl_int_to_c_int(env, argv[3]);
-    if (!enif_is_binary(env, argv[4]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_binary(env, argv[4])) return enif_make_badarg(env);
     char *path = convert_erl_binary_to_c_string(env, argv[4]);
-
-    if (!enif_is_binary(env, argv[5]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_binary(env, argv[5])) return enif_make_badarg(env);
     char *version = convert_erl_binary_to_c_string(env, argv[5]);
-
-    if (!enif_is_binary(env, argv[6]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_binary(env, argv[6])) return enif_make_badarg(env);
     char *branch = convert_erl_binary_to_c_string(env, argv[6]);
-
-    if (!enif_is_binary(env, argv[7]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_binary(env, argv[7])) return enif_make_badarg(env);
     char *broker_url = convert_erl_binary_to_c_string(env, argv[7]);
-
-    if (!enif_is_binary(env, argv[8]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_binary(env, argv[8])) return enif_make_badarg(env);
     char *broker_username = convert_erl_binary_to_c_string(env, argv[8]);
-
-    if (!enif_is_binary(env, argv[9]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_binary(env, argv[9])) return enif_make_badarg(env);
     char *broker_password = convert_erl_binary_to_c_string(env, argv[9]);
-
-    if (!enif_is_number(env, argv[10]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_number(env, argv[10])) return enif_make_badarg(env);
     int enable_pending = convert_erl_int_to_c_int(env, argv[10]);
-
-    if (!enif_is_binary(env, argv[11]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_binary(env, argv[11])) return enif_make_badarg(env);
     const char *const *consumer_version_selectors = binary_to_char_array(env, argv[11]);
-
-    if (!enif_is_number(env, argv[12]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_number(env, argv[12])) return enif_make_badarg(env);
     int consumer_version_selectors_len = convert_erl_int_to_c_int(env, argv[12]);
-
-    if (!enif_is_binary(env, argv[13]))
-    {
-        return enif_make_badarg(env);
-    }
+    
+    if (!enif_is_binary(env, argv[13])) return enif_make_badarg(env);
     char *protocol = convert_erl_binary_to_c_string(env, argv[13]);
+    
+    if (!enif_is_binary(env, argv[14])) return enif_make_badarg(env);
     char *state_path = convert_erl_binary_to_c_string(env, argv[14]);
 
-    struct VerifierHandle *verifierhandle;
-    verifierhandle = pactffi_verifier_new_for_application(name, version);
+    // Create and configure verifier
+    struct VerifierHandle *verifierhandle = pactffi_verifier_new_for_application(name, version);
     pactffi_verifier_set_no_pacts_is_error(verifierhandle, 0);
     pactffi_verifier_set_provider_info(verifierhandle, name, scheme, host, port, path);
     pactffi_verifier_add_provider_transport(verifierhandle, protocol, port, path, scheme);
 
-    printf("state change is %s\n", state_path);
-
-    if (state_path[0] != '\0')
-    {
+    if (state_path[0] != '\0') {
         pactffi_verifier_set_provider_state(verifierhandle, state_path, 0, 1);
     }
-    pactffi_verifier_set_verification_options(verifierhandle, 0, 5000),
+    
+    pactffi_verifier_set_verification_options(verifierhandle, 0, 5000);
     pactffi_verifier_set_publish_options(verifierhandle, version, NULL, NULL, -1, branch);
     pactffi_verifier_broker_source_with_selectors(verifierhandle, broker_url, broker_username, broker_password, NULL, enable_pending, NULL, NULL, -1, branch, consumer_version_selectors, consumer_version_selectors_len, NULL, -1);
+    
     setenv("PACT_DO_NOT_TRACK", "true", 1);
 
+    // Execute verification
     int verification_output = pactffi_verifier_execute(verifierhandle);
 
+    // Cleanup
     pactffi_verifier_shutdown(verifierhandle);
+    
+    // Free allocated strings
+    enif_free(name);
+    enif_free(scheme);
+    enif_free(host);
+    enif_free(path);
+    enif_free(version);
+    enif_free(branch);
+    enif_free(broker_url);
+    enif_free(broker_username);
+    enif_free(broker_password);
+    enif_free(protocol);
+    enif_free(state_path);
 
     return enif_make_int(env, verification_output);
 }
 
+static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+    // Extract and serialize all arguments as strings
+    char *name = convert_erl_binary_to_c_string(env, argv[0]);
+    char *scheme = convert_erl_binary_to_c_string(env, argv[1]);
+    char *host = convert_erl_binary_to_c_string(env, argv[2]);
+    int port = convert_erl_int_to_c_int(env, argv[3]);
+    char *path = convert_erl_binary_to_c_string(env, argv[4]);
+    char *version = convert_erl_binary_to_c_string(env, argv[5]);
+    char *branch = convert_erl_binary_to_c_string(env, argv[6]);
+    char *broker_url = convert_erl_binary_to_c_string(env, argv[7]);
+    char *broker_username = convert_erl_binary_to_c_string(env, argv[8]);
+    char *broker_password = convert_erl_binary_to_c_string(env, argv[9]);
+    int enable_pending = convert_erl_int_to_c_int(env, argv[10]);
+    char *consumer_version_selectors = convert_erl_binary_to_c_string(env, argv[11]);
+    int consumer_version_selectors_len = convert_erl_int_to_c_int(env, argv[12]);
+    char *protocol = convert_erl_binary_to_c_string(env, argv[13]);
+    char *state_path = convert_erl_binary_to_c_string(env, argv[14]);
+    char *exec_path = convert_erl_binary_to_c_string(env, argv[15]);
 
-static ERL_NIF_TERM schedule_async_file_verify(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
-    // ERL_NIF_DIRTY_JOB_IO_BOUND
-    return enif_schedule_nif(env, "verify_via_file", ERL_NIF_DIRTY_JOB_IO_BOUND, verify_via_file, argc, argv);
-}
+    // Create a temp file for config in the current working directory
+    char config_file_template[256];
+    snprintf(config_file_template, sizeof(config_file_template), "pact_config_XXXXXX");
+    int config_fd = mkstemp(config_file_template);
+    if (config_fd == -1) {
+        enif_free(name); enif_free(scheme); enif_free(host); enif_free(path);
+        enif_free(version); enif_free(branch); enif_free(broker_url);
+        enif_free(broker_username); enif_free(broker_password);
+        enif_free(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
+        return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_string(env, "mkstemp_config_failed", ERL_NIF_LATIN1));
+    }
 
-static ERL_NIF_TERM schedule_async_broker_verify(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
-    // ERL_NIF_DIRTY_JOB_IO_BOUND
-    // return verify_via_broker(env, argc, argv);
-    return enif_schedule_nif(env, "verify_via_broker", ERL_NIF_THR_UNDEFINED, verify_via_broker, argc, argv);
+    // Write config as key=value pairs (one per line)
+    dprintf(config_fd, "PACT_NAME=%s\n", name);
+    dprintf(config_fd, "PACT_SCHEME=%s\n", scheme);
+    dprintf(config_fd, "PACT_HOST=%s\n", host);
+    dprintf(config_fd, "PACT_PORT=%d\n", port);
+    dprintf(config_fd, "PACT_PATH=%s\n", path);
+    dprintf(config_fd, "PACT_VERSION=%s\n", version);
+    dprintf(config_fd, "PACT_BRANCH=%s\n", branch);
+    dprintf(config_fd, "PACT_BROKER_URL=%s\n", broker_url);
+    dprintf(config_fd, "PACT_BROKER_USERNAME=%s\n", broker_username);
+    dprintf(config_fd, "PACT_BROKER_PASSWORD=%s\n", broker_password);
+    dprintf(config_fd, "PACT_ENABLE_PENDING=%d\n", enable_pending);
+    dprintf(config_fd, "PACT_PROTOCOL=%s\n", protocol);
+    dprintf(config_fd, "PACT_STATE_PATH=%s\n", state_path);
+    dprintf(config_fd, "CONSUMER_VERSION_SELECTORS=%s\n", consumer_version_selectors);
+    dprintf(config_fd, "CONSUMER_VERSION_SELECTORS_LEN=%d\n", consumer_version_selectors_len);
+    close(config_fd);
+
+    // Create a temp file for result in the current working directory
+    char result_file_template[256];
+    snprintf(result_file_template, sizeof(result_file_template), "pact_result_XXXXXX");
+    int result_fd = mkstemp(result_file_template);
+    if (result_fd == -1) {
+        unlink(config_file_template);
+        enif_free(name); enif_free(scheme); enif_free(host); enif_free(path);
+        enif_free(version); enif_free(branch); enif_free(broker_url);
+        enif_free(broker_username); enif_free(broker_password);
+        enif_free(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
+        return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_string(env, "mkstemp_result_failed", ERL_NIF_LATIN1));
+    }
+    close(result_fd);
+
+    // Pass config and result file paths via environment variables
+    char *envp[3];
+    size_t sz1 = strlen("PACT_CONFIG_FILE=") + strlen(config_file_template) + 1;
+    size_t sz2 = strlen("PACT_RESULT_FILE=") + strlen(result_file_template) + 1;
+    envp[0] = malloc(sz1);
+    envp[1] = malloc(sz2);
+    snprintf(envp[0], sz1, "PACT_CONFIG_FILE=%s", config_file_template);
+    snprintf(envp[1], sz2, "PACT_RESULT_FILE=%s", result_file_template);
+    envp[2] = NULL;
+
+    char *const argv_exec[] = {exec_path, NULL};
+
+    pid_t pid = fork();
+    if (pid == 0) {
+        execve(exec_path, argv_exec, envp);
+        perror("execve failed");
+        exit(127);
+    } else if (pid > 0) {
+        int status;
+        waitpid(pid, &status, 0);
+        // Read result from file
+        int verification_output = -1;
+        FILE *fp = fopen(result_file_template, "r");
+        if (fp) {
+            if (fscanf(fp, "%d", &verification_output) != 1) {
+                verification_output = -1;
+            }
+            fclose(fp);
+            unlink(result_file_template);
+        }
+        unlink(config_file_template);
+        free(envp[0]);
+        free(envp[1]);
+        enif_free(name); enif_free(scheme); enif_free(host); enif_free(path);
+        enif_free(version); enif_free(branch); enif_free(broker_url);
+        enif_free(broker_username); enif_free(broker_password);
+        enif_free(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
+        enif_free(exec_path);
+        return enif_make_int(env, verification_output);
+    } else {
+        free(envp[0]);
+        free(envp[1]);
+        unlink(config_file_template);
+        unlink(result_file_template);
+        enif_free(name); enif_free(scheme); enif_free(host); enif_free(path);
+        enif_free(version); enif_free(branch); enif_free(broker_url);
+        enif_free(broker_username); enif_free(broker_password);
+        enif_free(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
+        enif_free(exec_path);
+        return enif_make_atom(env, "error");
+    }
 }
 
 static ErlNifFunc nif_funcs[] =
@@ -875,10 +944,9 @@ static ErlNifFunc nif_funcs[] =
         {"msg_given_with_param", 4, msg_given_with_param},
         {"msg_with_contents", 3, msg_with_contents},
         {"reify_message", 1, reify_message},
-        {"schedule_async_file_verify", 10, schedule_async_file_verify},
-        {"schedule_async_broker_verify", 15, schedule_async_broker_verify},
-        {"verify_via_broker", 15, verify_via_broker},
-        {"verify_via_file", 10, verify_via_file}
+        {"verify_via_file_direct", 10, verify_via_file_direct, ERL_NIF_DIRTY_JOB_IO_BOUND},
+        {"verify_via_broker_direct", 15, verify_via_broker_direct, ERL_NIF_DIRTY_JOB_IO_BOUND},
+        {"verify_via_broker_external", 16, verify_via_broker_external, ERL_NIF_DIRTY_JOB_IO_BOUND }
     };
 
 ERL_NIF_INIT(pactffi_nif, nif_funcs, NULL, NULL, NULL, NULL)

@@ -13,10 +13,11 @@
 -export([
     start_verifier/2,
     verify/1,
-    verify_v2/1
+    verify_v2/1,
+    stop_verifier/1
 ]).
 
--export([init/1, handle_call/3, terminate/2]).
+-export([init/1, handle_call/3, terminate/2, handle_cast/2]).
 
 -dialyzer(no_behaviours).
 
@@ -153,6 +154,9 @@ handle_call({get_message_providers_map}, _From, State) ->
     FallbackProviderFunc = maps:get(fallback_message_provider, ProviderOpts, undefined),
     {reply, {MessageProvidersMap, FallbackProviderFunc}, State}.
 
+handle_cast(_Msg, State) ->
+    {noreply, State}.
+
 terminate(_Reason, _State) ->
     ok.
 
@@ -171,45 +175,27 @@ verify_pacts_internal(VerifierRef, ProviderOpts, ProviderPortDetails) ->
     Scheme = maps:get(scheme, ProviderOpts, <<"http">>),
     FilePath = maps:get(file_path, PactSourceOpts, undefined),
     PactBrokerUrl = maps:get(broker_url, PactSourceOpts, undefined),
-    EscriptPath = code:priv_dir(pact_erlang) ++ "/pact_escript.escript",
+
     {Output1, OutputLog1} =
         case FilePath of
             undefined ->
                 {0, ""};
             _ ->
-                Args =
-                    [
-                        Name,
-                        Scheme,
-                        Host,
-                        Port,
-                        BaseUrl,
-                        Version,
-                        Branch,
-                        FilePath,
-                        Protocol,
-                        StateChangeUrl
-                    ],
-                ArgsString =
-                    lists:foldl(
-                        fun(Arg, Acc) ->
-                            A =
-                                case Arg of
-                                    X when is_integer(X) ->
-                                        integer_to_list(X);
-                                    _ ->
-                                        binary_to_list(Arg)
-                                end,
-                            Acc ++ " " ++ A
-                        end,
-                        "",
-                        Args
-                    ),
-                {Output, OutputLog} = pact_utils:run_executable_async(
-                    EscriptPath ++ " pactffi_nif verify_file_pacts " ++ ArgsString
+                Output = pactffi_nif:verify_file_pacts(
+                    Name,
+                    Scheme,
+                    Host,
+                    Port,
+                    BaseUrl,
+                    Version,
+                    Branch,
+                    FilePath,
+                    Protocol,
+                    StateChangeUrl
                 ),
-                {Output, OutputLog}
+                {Output, "File verification completed"}
         end,
+
     {Output2, OutputLog2} =
         case PactBrokerUrl of
             undefined ->
@@ -221,7 +207,7 @@ verify_pacts_internal(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                     enable_pending := EnablePending,
                     consumer_version_selectors := ConsumerVersionSelectors
                 } = PactSourceOpts,
-                Args1 = [
+                Output3 = pactffi_nif:verify_broker_pacts(
                     Name,
                     Scheme,
                     Host,
@@ -236,27 +222,10 @@ verify_pacts_internal(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                     ConsumerVersionSelectors,
                     Protocol,
                     StateChangeUrl
-                ],
-                ArgsString1 =
-                    lists:foldl(
-                        fun(Arg, Acc) ->
-                            A =
-                                case Arg of
-                                    Y when is_integer(Y) ->
-                                        integer_to_list(Y);
-                                    _ ->
-                                        binary_to_list(Arg)
-                                end,
-                            Acc ++ " " ++ A
-                        end,
-                        "",
-                        Args1
-                    ),
-                {Output3, OutputLog3} = pact_utils:run_executable_async(
-                    EscriptPath ++ " pactffi_nif verify_broker_pacts " ++ ArgsString1
                 ),
-                {Output3, OutputLog3}
+                {Output3, "Broker verification completed"}
         end,
+
     case Protocol of
         <<"message">> ->
             pact_verifier:stop(HttpPid),

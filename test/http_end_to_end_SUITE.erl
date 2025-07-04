@@ -5,12 +5,12 @@
 -include_lib("stdlib/include/assert.hrl").
 -include_lib("common_test/include/ct.hrl").
 
-all() -> [{group, consumer},{group, producer}].
+all() -> [{group, consumer},{group, producer}, pact_ref_server_handle_cast_test].
 
 groups() ->
     [
         {consumer, [get_animal_success, get_animal_success_2, get_animal_failure, create_animal, search_animals]},
-        {producer, [verify_producer]}
+        {producer, [verify_producer]}  
     ].
 
 init_per_suite(Config) ->
@@ -230,3 +230,10 @@ verify_producer(_Config) ->
     ?assertEqual(0, Output),
     ?assertEqual(0, Output2),
     animal_service:stop(HttpdPid).
+
+
+pact_ref_server_handle_cast_test(_Config) ->
+    {ok, Pid} = pact_ref_server:start(<<"consumer">>, <<"provider">>),
+    ok = gen_server:cast(Pid, test_cast_message),
+    pact_ref_server:stop(Pid),
+    ok.
