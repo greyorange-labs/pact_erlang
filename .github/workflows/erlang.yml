@@ -76,10 +76,10 @@ jobs:
       id: cache-deps
       uses: actions/cache@v3
       with:
-        path: |
-          priv
-          _build/default
-        key: ${{ runner.os }}-deps-${{ hashFiles('**/rebar.config', '**/rebar.lock', '**/Makefile') }}
-        restore-keys: ${{ runner.os }}-deps-
+       path: |
+        priv
+        _build/default
+       key: ${{ runner.os }}-deps-${{ hashFiles('**/rebar.config', '**/rebar.lock', '**/Makefile') }}
+       restore-keys: ${{ runner.os }}-deps-
     - name: Compile
       run: make
