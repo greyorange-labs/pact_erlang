@@ -4,6 +4,109 @@
 #include <unistd.h>
 #include "pact.h"
 
+// Helper function to extract individual JSON objects from JSON array string
+static char** parse_json_array_to_strings(const char *json_array, int *count) {
+    if (!json_array || json_array[0] != '[') {
+        *count = 0;
+        return NULL;
+    }
+    
+    // Count objects first
+    int object_count = 0;
+    int brace_level = 0;
+    int in_string = 0;
+    int escape_next = 0;
+    
+    for (const char *p = json_array; *p; p++) {
+        if (escape_next) {
+            escape_next = 0;
+            continue;
+        }
+        if (*p == '\\') {
+            escape_next = 1;
+            continue;
+        }
+        if (*p == '"') {
+            in_string = !in_string;
+            continue;
+        }
+        if (in_string) continue;
+        
+        if (*p == '{') {
+            if (brace_level == 0) object_count++;
+            brace_level++;
+        } else if (*p == '}') {
+            brace_level--;
+        }
+    }
+    
+    if (object_count == 0) {
+        *count = 0;
+        return NULL;
+    }
+    
+    // Allocate array for strings
+    char **result = malloc(sizeof(char*) * object_count);
+    if (!result) {
+        *count = 0;
+        return NULL;
+    }
+    
+    // Extract each object
+    int current_object = 0;
+    brace_level = 0;
+    in_string = 0;
+    escape_next = 0;
+    const char *object_start = NULL;
+    
+    for (const char *p = json_array; *p && current_object < object_count; p++) {
+        if (escape_next) {
+            escape_next = 0;
+            continue;
+        }
+        if (*p == '\\') {
+            escape_next = 1;
+            continue;
+        }
+        if (*p == '"') {
+            in_string = !in_string;
+            continue;
+        }
+        if (in_string) continue;
+        
+        if (*p == '{') {
+            if (brace_level == 0) {
+                object_start = p;
+            }
+            brace_level++;
+        } else if (*p == '}') {
+            brace_level--;
+            if (brace_level == 0 && object_start) {
+                // End of object - extract it
+                size_t len = p - object_start + 1;
+                result[current_object] = malloc(len + 1);
+                if (result[current_object]) {
+                    strncpy(result[current_object], object_start, len);
+                    result[current_object][len] = '\0';
+                    current_object++;
+                }
+            }
+        }
+    }
+    
+    *count = current_object;
+    return result;
+}
+
+static void free_string_array(char **array, int count) {
+    if (array) {
+        for (int i = 0; i < count; i++) {
+            if (array[i]) free(array[i]);
+        }
+        free(array);
+    }
+}
+
 // Usage: All arguments are read from a config file whose path is in PACT_CONFIG_FILE
 int main() {
     // Read config file path from env
@@ -68,7 +171,7 @@ int main() {
     printf("CONSUMER_VERSION_SELECTORS_LEN=%s\n", consumer_version_selectors_len_str);
     printf("PACT_PUBLISH_VERIFICATION_RESULTS=%s\n", publish_verification_results_str);
 
-    if (!name[0] || !scheme[0] || !host[0] || !port_str[0] || !path[0] || !version[0] || !branch[0] || !broker_url[0] || !broker_username[0] || !broker_password[0] || !enable_pending_str[0] || !protocol[0] || !consumer_version_selectors[0] || !consumer_version_selectors_len_str[0] || !publish_verification_results_str[0]) {
+    if (!name[0] || !scheme[0] || !host[0] || !port_str[0] || !path[0] || !version[0] || !branch[0] || !broker_url[0] || !broker_username[0] || !broker_password[0] || !enable_pending_str[0] || !protocol[0] || !consumer_version_selectors_len_str[0] || !publish_verification_results_str[0]) {
         fprintf(stderr, "Missing required config variable(s): ");
         int first = 1;
         if (!name[0]) { fprintf(stderr, "%sname", first ? "" : ", "); first = 0; }
@@ -83,8 +186,6 @@ int main() {
         if (!broker_password[0]) { fprintf(stderr, "%sbroker_password", first ? "" : ", "); first = 0; }
         if (!enable_pending_str[0]) { fprintf(stderr, "%senable_pending", first ? "" : ", "); first = 0; }
         if (!protocol[0]) { fprintf(stderr, "%sprotocol", first ? "" : ", "); first = 0; }
-        if (!consumer_version_selectors[0]) { fprintf(stderr, "%sconsumer_version_selectors", first ? "" : ", "); first = 0; }
-        if (!consumer_version_selectors_len_str[0]) { fprintf(stderr, "%sconsumer_version_selectors_len", first ? "" : ", "); first = 0; }
         if (!publish_verification_results_str[0]) { fprintf(stderr, "%spublish_verification_results", first ? "" : ", "); first = 0; }
         fprintf(stderr, "\n");
         return 1;
@@ -94,6 +195,31 @@ int main() {
     int enable_pending = atoi(enable_pending_str);
     int consumer_version_selectors_len = atoi(consumer_version_selectors_len_str);
     int publish_verification_results = atoi(publish_verification_results_str);
+
+    // Handle consumer_version_selectors as JSON array string from Erlang
+    // Parse the JSON array into individual selector strings for the Pact FFI
+    char **selector_strings = NULL;
+    const char **selector_array = NULL;
+    const char *const *selectors_ptr = NULL;
+    int selectors_count = consumer_version_selectors_len;
+    
+    if (consumer_version_selectors[0] != '\0' && selectors_count > 0) {
+        // Parse JSON array into individual strings
+        int parsed_count = 0;
+        selector_strings = parse_json_array_to_strings(consumer_version_selectors, &parsed_count);
+        
+        if (selector_strings && parsed_count > 0) {
+            // Create const char** array for Pact FFI
+            selector_array = malloc(sizeof(const char *) * (selectors_count + 1));
+            if (selector_array) {
+                for (int i = 0; i < selectors_count; i++) {
+                    selector_array[i] = selector_strings[i];
+                }
+                selector_array[selectors_count] = NULL;
+                selectors_ptr = (const char *const *)selector_array;
+            }
+        }
+    }
 
     struct VerifierHandle *verifierhandle = pactffi_verifier_new_for_application(name, version);
     pactffi_verifier_set_no_pacts_is_error(verifierhandle, 0);
@@ -109,9 +235,17 @@ int main() {
     }
     pactffi_verifier_broker_source_with_selectors(
         verifierhandle, broker_url, broker_username, broker_password, NULL, enable_pending, NULL, NULL, -1, branch,
-        (const char *const *)&consumer_version_selectors, consumer_version_selectors_len, NULL, -1);
+        selectors_ptr, selectors_count, NULL, -1);
     int verification_output = pactffi_verifier_execute(verifierhandle);
     pactffi_verifier_shutdown(verifierhandle);
+
+    // Cleanup allocated memory
+    if (selector_array) {
+        free(selector_array);
+    }
+    if (selector_strings) {
+        free_string_array(selector_strings, selectors_count);
+    }
 
     // Write verification_output to file if PACT_RESULT_FILE is set, then delete the file
     const char *result_file = getenv("PACT_RESULT_FILE");

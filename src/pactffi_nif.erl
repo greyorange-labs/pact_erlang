@@ -238,15 +238,7 @@ verify_broker_pacts(
     PublishVerificationResults
 ) ->
     {ok, DecodedSelectors} = thoas:decode(ConsumerVersionSelectors),
-    TotalConsumerVersionSelectors =
-        case DecodedSelectors of
-            List when is_list(List) ->
-                length(List);
-            Map when is_map(Map) ->
-                maps:size(Map);
-            _ ->
-                0
-        end,
+    TotalConsumerVersionSelectors = length(DecodedSelectors),
     case os:type() of
         {unix, linux} ->
             ExternalHelperPath = list_to_binary(

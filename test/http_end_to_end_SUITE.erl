@@ -200,9 +200,9 @@ verify_producer(_Config) ->
             broker_username => <<"pact_workshop">>,
             broker_password => <<"pact_workshop">>,
             enable_pending => 1,
-            consumer_version_selectors => thoas:encode(#{
+            consumer_version_selectors => thoas:encode([#{
                 matchingBranch => true
-            })
+            }])
         },
     ProviderOpts = #{
         name => Name,

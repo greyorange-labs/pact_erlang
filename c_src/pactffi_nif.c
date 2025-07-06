@@ -9,39 +9,6 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-static const char *const * binary_to_char_array(ErlNifEnv* env, const ERL_NIF_TERM binary_term) {
-    ErlNifBinary binary;
-    
-    // Extract the binary data from the Erlang term
-    if (!enif_inspect_binary(env, binary_term, &binary))
-        return NULL;
-
-    // Allocate memory for an array of const char *
-    const char **char_array = enif_alloc(sizeof(const char *) * (binary.size + 1)); // +1 for NULL terminator
-    if (!char_array)
-        return NULL;
-
-    // Convert each byte in the binary data to a const char *
-    for (int i = 0; i < binary.size; i++) {
-        char *str = enif_alloc(2); // Allocate memory for a single character plus null terminator
-        if (!str) {
-            // Free already allocated memory
-            for (int j = 0; j < i; j++) {
-                enif_free((void *)char_array[j]);
-            }
-            enif_free(char_array);
-            return NULL;
-        }
-        snprintf(str, 2, "%c", binary.data[i]); // Convert byte to a single-character string
-        char_array[i] = str;
-    }
-
-    // Null-terminate the array
-    char_array[binary.size] = NULL;
-
-    return char_array;
-}
-
 static char *convert_erl_binary_to_c_string(ErlNifEnv *env, ERL_NIF_TERM binary_term)
 {
     ErlNifBinary binary;
@@ -60,6 +27,154 @@ static char *convert_erl_binary_to_c_string(ErlNifEnv *env, ERL_NIF_TERM binary_
     str[binary.size] = '\0';
 
     return str;
+}
+
+static char* extract_json_object(const char *json_string, int object_index) {
+    // Extract the nth JSON object from an array
+    if (!json_string || json_string[0] != '[') {
+        // Not an array, return the whole string
+        size_t len = strlen(json_string);
+        char *result = enif_alloc(len + 1);
+        if (result) {
+            strcpy(result, json_string);
+        }
+        return result;
+    }
+    
+    int current_object = 0;
+    int brace_level = 0;
+    int in_string = 0;
+    int escape_next = 0;
+    const char *object_start = NULL;
+    
+    for (const char *p = json_string; *p; p++) {
+        if (escape_next) {
+            escape_next = 0;
+            continue;
+        }
+        
+        if (*p == '\\') {
+            escape_next = 1;
+            continue;
+        }
+        
+        if (*p == '"') {
+            in_string = !in_string;
+            continue;
+        }
+        
+        if (in_string) {
+            continue;
+        }
+        
+        if (*p == '{') {
+            if (brace_level == 0) {
+                // Start of a new object
+                if (current_object == object_index) {
+                    object_start = p;
+                }
+                current_object++;
+            }
+            brace_level++;
+        } else if (*p == '}') {
+            brace_level--;
+            if (brace_level == 0 && object_start && current_object - 1 == object_index) {
+                // End of the object we want
+                size_t len = p - object_start + 1;
+                char *result = enif_alloc(len + 1);
+                if (result) {
+                    strncpy(result, object_start, len);
+                    result[len] = '\0';
+                }
+                return result;
+            }
+        }
+    }
+    
+    return NULL;
+}
+
+static const char *const * binary_to_char_array(ErlNifEnv* env, const ERL_NIF_TERM binary_term, int object_count) {
+    // Convert binary to JSON string(s) for consumer version selectors
+    char *json_string = convert_erl_binary_to_c_string(env, binary_term);
+    if (!json_string)
+        return NULL;
+
+    // Allocate array for JSON strings plus NULL terminator
+    const char **char_array = enif_alloc(sizeof(const char *) * (object_count + 1));
+    if (!char_array) {
+        enif_free(json_string);
+        return NULL;
+    }
+
+    // Extract each JSON object
+    for (int i = 0; i < object_count; i++) {
+        char *object_string = extract_json_object(json_string, i);
+        if (!object_string) {
+            // Cleanup on failure
+            for (int j = 0; j < i; j++) {
+                enif_free((void*)char_array[j]);
+            }
+            enif_free(char_array);
+            enif_free(json_string);
+            return NULL;
+        }
+        char_array[i] = object_string;
+    }
+    
+    // Set null terminator
+    char_array[object_count] = NULL;
+    
+    // Free the original JSON string as we've extracted individual objects
+    enif_free(json_string);
+    
+    return char_array;
+}
+
+static int count_selectors(const char *const *char_array) {
+    if (!char_array) return 0;
+    
+    int count = 0;
+    while (char_array[count] != NULL) {
+        count++;
+    }
+    return count;
+}
+
+static char* reconstruct_json_array(const char *const *char_array) {
+    if (!char_array || !char_array[0]) return NULL;
+    
+    int count = count_selectors(char_array);
+    
+    // Always reconstruct as JSON array, even for single object
+    size_t total_len = 2; // Start with "[]"
+    for (int i = 0; i < count; i++) {
+        total_len += strlen(char_array[i]);
+        if (i > 0) total_len += 1; // comma separator
+    }
+    
+    char *result = enif_alloc(total_len + 1);
+    if (!result) return NULL;
+    
+    strcpy(result, "[");
+    for (int i = 0; i < count; i++) {
+        if (i > 0) strcat(result, ",");
+        strcat(result, char_array[i]);
+    }
+    strcat(result, "]");
+    
+    return result;
+}
+
+static void free_char_array(const char *const *char_array) {
+    if (char_array) {
+        // Free all JSON strings in the array
+        for (int i = 0; char_array[i] != NULL; i++) {
+            enif_free((void*)char_array[i]);
+        }
+        // Free the array itself
+        enif_free((void*)char_array);
+    }
 }
 
 static uint8_t* convertCharToUint8(const char* input) {
@@ -755,11 +870,11 @@ static ERL_NIF_TERM verify_via_broker_direct(ErlNifEnv *env, int argc, const ERL
     if (!enif_is_number(env, argv[10])) return enif_make_badarg(env);
     int enable_pending = convert_erl_int_to_c_int(env, argv[10]);
     
-    if (!enif_is_binary(env, argv[11])) return enif_make_badarg(env);
-    const char *const *consumer_version_selectors = binary_to_char_array(env, argv[11]);
-    
     if (!enif_is_number(env, argv[12])) return enif_make_badarg(env);
     int consumer_version_selectors_len = convert_erl_int_to_c_int(env, argv[12]);
+    
+    if (!enif_is_binary(env, argv[11])) return enif_make_badarg(env);
+    const char *const *consumer_version_selectors = binary_to_char_array(env, argv[11], consumer_version_selectors_len);
     
     if (!enif_is_binary(env, argv[13])) return enif_make_badarg(env);
     char *protocol = convert_erl_binary_to_c_string(env, argv[13]);
@@ -804,6 +919,7 @@ static ERL_NIF_TERM verify_via_broker_direct(ErlNifEnv *env, int argc, const ERL
     enif_free(broker_url);
     enif_free(broker_username);
     enif_free(broker_password);
+    free_char_array(consumer_version_selectors);
     enif_free(protocol);
     enif_free(state_path);
 
@@ -834,10 +950,10 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
     char *broker_password = convert_erl_binary_to_c_string(env, argv[9]);
     if (!enif_is_number(env, argv[10])) return enif_make_badarg(env);
     int enable_pending = convert_erl_int_to_c_int(env, argv[10]);
-    if (!enif_is_binary(env, argv[11])) return enif_make_badarg(env);
-    char *consumer_version_selectors = convert_erl_binary_to_c_string(env, argv[11]);
     if (!enif_is_number(env, argv[12])) return enif_make_badarg(env);
     int consumer_version_selectors_len = convert_erl_int_to_c_int(env, argv[12]);
+    if (!enif_is_binary(env, argv[11])) return enif_make_badarg(env);
+    const char *const *consumer_version_selectors = binary_to_char_array(env, argv[11], consumer_version_selectors_len);
     if (!enif_is_binary(env, argv[13])) return enif_make_badarg(env);
     char *protocol = convert_erl_binary_to_c_string(env, argv[13]);
     if (!enif_is_binary(env, argv[14])) return enif_make_badarg(env);
@@ -855,7 +971,7 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
         enif_free(name); enif_free(scheme); enif_free(host); enif_free(path);
         enif_free(version); enif_free(branch); enif_free(broker_url);
         enif_free(broker_username); enif_free(broker_password);
-        enif_free(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
+        free_char_array(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
         enif_free(exec_path);
         return enif_make_int(env, -1);
     }
@@ -874,7 +990,10 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
     dprintf(config_fd, "PACT_ENABLE_PENDING=%d\n", enable_pending);
     dprintf(config_fd, "PACT_PROTOCOL=%s\n", protocol);
     dprintf(config_fd, "PACT_STATE_PATH=%s\n", state_path);
-    dprintf(config_fd, "CONSUMER_VERSION_SELECTORS=%s\n", consumer_version_selectors);
+    // Reconstruct the consumer version selectors for the external verifier
+    char *selectors_json = reconstruct_json_array(consumer_version_selectors);
+    
+    dprintf(config_fd, "CONSUMER_VERSION_SELECTORS=%s\n", selectors_json ? selectors_json : "[]");
     dprintf(config_fd, "CONSUMER_VERSION_SELECTORS_LEN=%d\n", consumer_version_selectors_len);
     dprintf(config_fd, "PACT_PUBLISH_VERIFICATION_RESULTS=%d\n", publish_verification_results);
     close(config_fd);
@@ -888,7 +1007,8 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
         enif_free(name); enif_free(scheme); enif_free(host); enif_free(path);
         enif_free(version); enif_free(branch); enif_free(broker_url);
         enif_free(broker_username); enif_free(broker_password);
-        enif_free(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
+        free_char_array(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
+        if (selectors_json) enif_free(selectors_json);
         enif_free(exec_path);
         return enif_make_int(env, -1);
     }
@@ -930,7 +1050,8 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
         enif_free(name); enif_free(scheme); enif_free(host); enif_free(path);
         enif_free(version); enif_free(branch); enif_free(broker_url);
         enif_free(broker_username); enif_free(broker_password);
-        enif_free(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
+        free_char_array(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
+        if (selectors_json) enif_free(selectors_json);
         enif_free(exec_path);
         return enif_make_int(env, verification_output);
     } else {
@@ -941,7 +1062,8 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
         enif_free(name); enif_free(scheme); enif_free(host); enif_free(path);
         enif_free(version); enif_free(branch); enif_free(broker_url);
         enif_free(broker_username); enif_free(broker_password);
-        enif_free(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
+        free_char_array(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
+        if (selectors_json) enif_free(selectors_json);
         enif_free(exec_path);
         return enif_make_int(env, -1);
     }
