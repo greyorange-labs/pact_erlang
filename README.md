@@ -422,9 +422,11 @@ pact_source_opts => #{
     broker_username => <<"username">>,
     broker_password => <<"password">>,
     enable_pending => 1,
-    consumer_version_selectors => <<"{}">>  % JSON string
+    consumer_version_selectors => []
 }
 ~~~
+
+For possible values of consumer_version_selectors, check https://docs.pact.io/pact_broker/advanced_topics/consumer_version_selectors
 
 **Message Providers:**
 
@@ -453,7 +455,7 @@ ProviderOpts = #{
         broker_username => <<"pact_user">>,
         broker_password => <<"pact_pass">>,
         enable_pending => 1,
-        consumer_version_selectors => <<"{}">>
+        consumer_version_selectors => [#{<<"matchingBranch">> => true}]
     }
 },
 
@@ -737,7 +739,7 @@ BrokerConfigs = #{
     broker_username => <<"pact_workshop">>,
     broker_password => <<"pact_workshop">>,
     enable_pending => 1,
-    consumer_version_selectors => thoas:encode(#{})
+    consumer_version_selectors => []
 },
 ProviderOpts = #{
     name => Name,

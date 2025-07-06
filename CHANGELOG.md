@@ -10,16 +10,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - **[Important Bugfix]** Unable to verify pacts ([#32](https://github.com/greyorange-labs/pact_erlang/issues/32))
 - Fixes compiler warnings ([#45](https://github.com/greyorange-labs/pact_erlang/issues/45))
-- Fixed consumer version selectors bug.
+- Fixed consumer version selectors option, it was not getting adhered.  
 
 ### Changed
 
 - Upgraded pact ffi version to 0.4.27. Note: Existing pacts in the pact broker may cause version conflicts due to schema changes. Users are advised to update their existing pacts to align with the new version or remove outdated pacts from the broker to avoid issues.
+- **[Breaking Change]** `consumer_version_selectors` option in pact verification now expects a list of maps instead of a encoded json object.
 
 ### Added
 
 - Pact interaction verification results will start getting printed to stdout.
-- Option to pass **publish_verification_results** in provider verification options, see README.md for usage.
+- Ability to enable pact ffi library logging using `pact:enable_logging(LogLevel)`.
+- Option to pass `publish_verification_results` in provider verification options, see README.md for usage.
 
 ## [0.3.0] - 2025-06-05
 

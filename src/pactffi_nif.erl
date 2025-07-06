@@ -237,8 +237,7 @@ verify_broker_pacts(
     StatePath,
     PublishVerificationResults
 ) ->
-    {ok, DecodedSelectors} = thoas:decode(ConsumerVersionSelectors),
-    TotalConsumerVersionSelectors = length(DecodedSelectors),
+    TotalConsumerVersionSelectors = length(ConsumerVersionSelectors),
     case os:type() of
         {unix, linux} ->
             ExternalHelperPath = list_to_binary(
@@ -256,7 +255,7 @@ verify_broker_pacts(
                 BrokerUser,
                 BrokerPassword,
                 EnablePending,
-                ConsumerVersionSelectors,
+                thoas:encode(ConsumerVersionSelectors),
                 TotalConsumerVersionSelectors,
                 Protocol,
                 StatePath,
@@ -276,7 +275,7 @@ verify_broker_pacts(
                 BrokerUser,
                 BrokerPassword,
                 EnablePending,
-                ConsumerVersionSelectors,
+                thoas:encode(ConsumerVersionSelectors),
                 TotalConsumerVersionSelectors,
                 Protocol,
                 StatePath,
