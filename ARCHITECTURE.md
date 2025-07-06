@@ -177,7 +177,7 @@ The underlying Rust library that provides:
    Result = pact_verifier:verify(VerifierRef)
    ```
    - Routes through platform-specific verification paths
-   - Linux: Uses external executable via `pact_verifier_exec.c`
+   - Linux: Uses external executable via `pact_verifier_external.c`
    - macOS: Uses direct NIF calls
    - Handles both file-based and broker-based verification
 
@@ -245,6 +245,5 @@ The underlying Rust library that provides:
 - **File-based Testing**: Local Pact file verification
 - **Broker Integration**: Remote contract verification
 - **Result Reporting**: Machine-readable verification results
-- **Pipeline Integration**: Docker and shell script support
 
 This architecture provides a robust foundation for contract testing in Erlang applications while leveraging the mature Pact FFI implementation for core functionality.

@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - **[Important Bugfix]** Unable to verify pacts ([#32](https://github.com/greyorange-labs/pact_erlang/issues/32))
 - Fixes compiler warnings ([#45](https://github.com/greyorange-labs/pact_erlang/issues/45))
+- Fixed consumer version selectors bug.
 
 ### Changed
 
@@ -18,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Pact interaction verification results will start getting printed to stdout.
+- Option to pass **publish_verification_results** in provider verification options, see README.md for usage.
 
 ## [0.3.0] - 2025-06-05
 

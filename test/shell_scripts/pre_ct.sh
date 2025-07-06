@@ -18,8 +18,8 @@ else
 fi
 $COMPOSE_BIN -f ct-docker-compose.yml up -d "${services[@]}"
 echo "STEP : Wait for services to be accessible .................................."
-chmod +x ./shell_scripts/health_check.sh
-./shell_scripts/health_check.sh "${services[@]}"
+chmod +x ./test/shell_scripts/health_check.sh
+./test/shell_scripts/health_check.sh "${services[@]}"
 if [ $? -ne 0 ]; then
     exit 1
 fi

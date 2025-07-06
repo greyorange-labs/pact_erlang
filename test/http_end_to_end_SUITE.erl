@@ -212,10 +212,7 @@ verify_producer(_Config) ->
         branch => Branch,
         pact_source_opts => BrokerOpts,
         state_change_url => StateChangePath,
-        % message_providers => #{
-        %     <<"a weather data message">> => {message_pact_SUITE, generate_message, [23.5, 20, 75.0]}
-        % },
-        % fallback_message_provider => {message_pact_SUITE, generate_message, [24.5, 20, 93.0]},
+        publish_verification_results => 0,
         protocol => Protocol
     },
     {ok, VerifierRef} = pact_verifier:start_verifier(Name, ProviderOpts),

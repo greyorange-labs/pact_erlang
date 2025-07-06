@@ -21,7 +21,7 @@ int main() {
     }
 
     char line[1024];
-    char name[256] = "", scheme[64] = "", host[256] = "", port_str[16] = "", path[256] = "", version[64] = "", branch[128] = "", broker_url[512] = "", broker_username[256] = "", broker_password[256] = "", enable_pending_str[8] = "", protocol[64] = "", state_path[256] = "", consumer_version_selectors[1024] = "", consumer_version_selectors_len_str[16] = "";
+    char name[256] = "", scheme[64] = "", host[256] = "", port_str[16] = "", path[256] = "", version[64] = "", branch[128] = "", broker_url[512] = "", broker_username[256] = "", broker_password[256] = "", enable_pending_str[8] = "", protocol[64] = "", state_path[256] = "", consumer_version_selectors[1024] = "", consumer_version_selectors_len_str[16] = "", publish_verification_results_str[8] = "";
 
     while (fgets(line, sizeof(line), cfp)) {
         char *eq = strchr(line, '=');
@@ -47,6 +47,7 @@ int main() {
         else if (strcmp(key, "PACT_STATE_PATH") == 0) strncpy(state_path, val, sizeof(state_path)-1);
         else if (strcmp(key, "CONSUMER_VERSION_SELECTORS") == 0) strncpy(consumer_version_selectors, val, sizeof(consumer_version_selectors)-1);
         else if (strcmp(key, "CONSUMER_VERSION_SELECTORS_LEN") == 0) strncpy(consumer_version_selectors_len_str, val, sizeof(consumer_version_selectors_len_str)-1);
+        else if (strcmp(key, "PACT_PUBLISH_VERIFICATION_RESULTS") == 0) strncpy(publish_verification_results_str, val, sizeof(publish_verification_results_str)-1);
     }
     fclose(cfp);
 
@@ -65,8 +66,9 @@ int main() {
     printf("PACT_STATE_PATH=%s\n", state_path);
     printf("CONSUMER_VERSION_SELECTORS=%s\n", consumer_version_selectors);
     printf("CONSUMER_VERSION_SELECTORS_LEN=%s\n", consumer_version_selectors_len_str);
+    printf("PACT_PUBLISH_VERIFICATION_RESULTS=%s\n", publish_verification_results_str);
 
-    if (!name[0] || !scheme[0] || !host[0] || !port_str[0] || !path[0] || !version[0] || !branch[0] || !broker_url[0] || !broker_username[0] || !broker_password[0] || !enable_pending_str[0] || !protocol[0] || !consumer_version_selectors[0] || !consumer_version_selectors_len_str[0]) {
+    if (!name[0] || !scheme[0] || !host[0] || !port_str[0] || !path[0] || !version[0] || !branch[0] || !broker_url[0] || !broker_username[0] || !broker_password[0] || !enable_pending_str[0] || !protocol[0] || !consumer_version_selectors[0] || !consumer_version_selectors_len_str[0] || !publish_verification_results_str[0]) {
         fprintf(stderr, "Missing required config variable(s): ");
         int first = 1;
         if (!name[0]) { fprintf(stderr, "%sname", first ? "" : ", "); first = 0; }
@@ -83,6 +85,7 @@ int main() {
         if (!protocol[0]) { fprintf(stderr, "%sprotocol", first ? "" : ", "); first = 0; }
         if (!consumer_version_selectors[0]) { fprintf(stderr, "%sconsumer_version_selectors", first ? "" : ", "); first = 0; }
         if (!consumer_version_selectors_len_str[0]) { fprintf(stderr, "%sconsumer_version_selectors_len", first ? "" : ", "); first = 0; }
+        if (!publish_verification_results_str[0]) { fprintf(stderr, "%spublish_verification_results", first ? "" : ", "); first = 0; }
         fprintf(stderr, "\n");
         return 1;
     }
@@ -90,6 +93,7 @@ int main() {
     int port = atoi(port_str);
     int enable_pending = atoi(enable_pending_str);
     int consumer_version_selectors_len = atoi(consumer_version_selectors_len_str);
+    int publish_verification_results = atoi(publish_verification_results_str);
 
     struct VerifierHandle *verifierhandle = pactffi_verifier_new_for_application(name, version);
     pactffi_verifier_set_no_pacts_is_error(verifierhandle, 0);
@@ -100,7 +104,9 @@ int main() {
         pactffi_verifier_set_provider_state(verifierhandle, state_path, 0, 1);
     }
     pactffi_verifier_set_verification_options(verifierhandle, 0, 5000);
-    pactffi_verifier_set_publish_options(verifierhandle, version, NULL, NULL, -1, branch);
+    if (publish_verification_results == 1) {
+        pactffi_verifier_set_publish_options(verifierhandle, version, NULL, NULL, -1, branch);
+    }
     pactffi_verifier_broker_source_with_selectors(
         verifierhandle, broker_url, broker_username, broker_password, NULL, enable_pending, NULL, NULL, -1, branch,
         (const char *const *)&consumer_version_selectors, consumer_version_selectors_len, NULL, -1);

@@ -678,6 +678,9 @@ static ERL_NIF_TERM verify_via_file_direct(ErlNifEnv *env, int argc, const ERL_N
     if (!enif_is_binary(env, argv[9])) return enif_make_badarg(env);
     char *state_path = convert_erl_binary_to_c_string(env, argv[9]);
 
+    if (!enif_is_number(env, argv[10])) return enif_make_badarg(env);
+    int publish_verification_results = convert_erl_int_to_c_int(env, argv[10]);
+
     // Create verifier handle and configure it
     struct VerifierHandle *verifierhandle = pactffi_verifier_new_for_application(name, version);
     pactffi_verifier_set_no_pacts_is_error(verifierhandle, 0);
@@ -689,7 +692,9 @@ static ERL_NIF_TERM verify_via_file_direct(ErlNifEnv *env, int argc, const ERL_N
     }
     
     pactffi_verifier_set_verification_options(verifierhandle, 0, 5000);
-    pactffi_verifier_set_publish_options(verifierhandle, version, NULL, NULL, -1, branch);
+    if (publish_verification_results == 1) {
+        pactffi_verifier_set_publish_options(verifierhandle, version, NULL, NULL, -1, branch);
+    }
     pactffi_verifier_add_directory_source(verifierhandle, file_path);
     
     setenv("PACT_DO_NOT_TRACK", "true", 1);
@@ -762,6 +767,9 @@ static ERL_NIF_TERM verify_via_broker_direct(ErlNifEnv *env, int argc, const ERL
     if (!enif_is_binary(env, argv[14])) return enif_make_badarg(env);
     char *state_path = convert_erl_binary_to_c_string(env, argv[14]);
 
+    if( !enif_is_number(env, argv[15])) return enif_make_badarg(env);
+    int publish_verification_results = convert_erl_int_to_c_int(env, argv[15]);
+
     // Create and configure verifier
     struct VerifierHandle *verifierhandle = pactffi_verifier_new_for_application(name, version);
     pactffi_verifier_set_no_pacts_is_error(verifierhandle, 0);
@@ -773,7 +781,9 @@ static ERL_NIF_TERM verify_via_broker_direct(ErlNifEnv *env, int argc, const ERL
     }
     
     pactffi_verifier_set_verification_options(verifierhandle, 0, 5000);
-    pactffi_verifier_set_publish_options(verifierhandle, version, NULL, NULL, -1, branch);
+    if (publish_verification_results == 1) {
+        pactffi_verifier_set_publish_options(verifierhandle, version, NULL, NULL, -1, branch);
+    }
     pactffi_verifier_broker_source_with_selectors(verifierhandle, broker_url, broker_username, broker_password, NULL, enable_pending, NULL, NULL, -1, branch, consumer_version_selectors, consumer_version_selectors_len, NULL, -1);
     
     setenv("PACT_DO_NOT_TRACK", "true", 1);
@@ -817,7 +827,8 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
     int consumer_version_selectors_len = convert_erl_int_to_c_int(env, argv[12]);
     char *protocol = convert_erl_binary_to_c_string(env, argv[13]);
     char *state_path = convert_erl_binary_to_c_string(env, argv[14]);
-    char *exec_path = convert_erl_binary_to_c_string(env, argv[15]);
+    int publish_verification_results = convert_erl_int_to_c_int(env, argv[15]);
+    char *exec_path = convert_erl_binary_to_c_string(env, argv[16]);
 
     // Create a temp file for config in the current working directory
     char config_file_template[256];
@@ -847,6 +858,7 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
     dprintf(config_fd, "PACT_STATE_PATH=%s\n", state_path);
     dprintf(config_fd, "CONSUMER_VERSION_SELECTORS=%s\n", consumer_version_selectors);
     dprintf(config_fd, "CONSUMER_VERSION_SELECTORS_LEN=%d\n", consumer_version_selectors_len);
+    dprintf(config_fd, "PACT_PUBLISH_VERIFICATION_RESULTS=%d\n", publish_verification_results);
     close(config_fd);
 
     // Create a temp file for result in the current working directory
@@ -944,9 +956,9 @@ static ErlNifFunc nif_funcs[] =
         {"msg_given_with_param", 4, msg_given_with_param},
         {"msg_with_contents", 3, msg_with_contents},
         {"reify_message", 1, reify_message},
-        {"verify_via_file_direct", 10, verify_via_file_direct, ERL_NIF_DIRTY_JOB_IO_BOUND},
-        {"verify_via_broker_direct", 15, verify_via_broker_direct, ERL_NIF_DIRTY_JOB_IO_BOUND},
-        {"verify_via_broker_external", 16, verify_via_broker_external, ERL_NIF_DIRTY_JOB_IO_BOUND }
+        {"verify_via_file_direct", 11, verify_via_file_direct, ERL_NIF_DIRTY_JOB_IO_BOUND},
+        {"verify_via_broker_direct", 16, verify_via_broker_direct, ERL_NIF_DIRTY_JOB_IO_BOUND},
+        {"verify_via_broker_external", 17, verify_via_broker_external, ERL_NIF_DIRTY_JOB_IO_BOUND}
     };
 
 ERL_NIF_INIT(pactffi_nif, nif_funcs, NULL, NULL, NULL, NULL)

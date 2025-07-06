@@ -40,8 +40,8 @@ TARGET := $(BASEDIR)/priv/libpact_ffi.so
 LIBRARY_PATH := $(LIBRARY_BASE_PATH)/$(PACT_FILE_NAME)
 PACT_VERSION_FILE := $(LIBRARY_BASE_PATH)/.pact-ffi-version-$(PACT_FFI_VERSION)
 
-PVER_EXEC_SRC := pact_verifier_exec.c
-PVER_EXEC_BIN := $(LIBRARY_BASE_PATH)/pact_verifier_exec
+PVER_EXEC_SRC := pact_verifier_external.c
+PVER_EXEC_BIN := $(LIBRARY_BASE_PATH)/pact_verifier_external
 
 ifeq ($(UNAME),Linux)
 all: $(TARGET) $(PVER_EXEC_BIN) compile_commands.json

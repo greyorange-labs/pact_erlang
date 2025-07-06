@@ -34,11 +34,8 @@
     msg_with_contents/3,
     reify_message/1,
     get_reified_message/1,
-    verify_file_pacts/10,
-    verify_broker_pacts/14,
-    verify_via_broker_direct/15,
-    verify_via_file_direct/10,
-    verify_via_broker_external/16
+    verify_file_pacts/11,
+    verify_broker_pacts/15
 ]).
 
 % Import the NIF functions from the C library
@@ -69,9 +66,9 @@
     msg_given_with_param/4,
     msg_with_contents/3,
     reify_message/1,
-    verify_via_broker_direct/15,
-    verify_via_broker_external/16,
-    verify_via_file_direct/10
+    verify_via_broker_direct/16,
+    verify_via_broker_external/17,
+    verify_via_file_direct/11
 ]).
 -on_load(init/0).
 
@@ -184,20 +181,42 @@ msg_with_contents(_, _, _) ->
 reify_message(_) ->
     erlang:nif_error("NIF library not loaded").
 
-verify_via_file_direct(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10) ->
+verify_via_file_direct(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11) ->
     erlang:nif_error("NIF library not loaded").
 
-verify_via_broker_direct(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15) ->
+verify_via_broker_direct(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16) ->
     erlang:nif_error("NIF library not loaded").
 
-verify_via_broker_external(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16) ->
+verify_via_broker_external(
+    _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17
+) ->
     erlang:nif_error("NIF library not loaded").
 
 verify_file_pacts(
-    Name, Scheme, Host, Port, Path, Version, Branch, FilePath, Protocol, StatePath
+    Name,
+    Scheme,
+    Host,
+    Port,
+    Path,
+    Version,
+    Branch,
+    FilePath,
+    Protocol,
+    StatePath,
+    PublishVerificationResults
 ) ->
     verify_via_file_direct(
-        Name, Scheme, Host, Port, Path, Version, Branch, FilePath, Protocol, StatePath
+        Name,
+        Scheme,
+        Host,
+        Port,
+        Path,
+        Version,
+        Branch,
+        FilePath,
+        Protocol,
+        StatePath,
+        PublishVerificationResults
     ).
 
 %% @doc Calls the appropriate broker verification NIF depending on OS
@@ -215,13 +234,23 @@ verify_broker_pacts(
     EnablePending,
     ConsumerVersionSelectors,
     Protocol,
-    StatePath
+    StatePath,
+    PublishVerificationResults
 ) ->
-    TotalConsumerVersionSelectors = 0,
+    {ok, DecodedSelectors} = thoas:decode(ConsumerVersionSelectors),
+    TotalConsumerVersionSelectors =
+        case DecodedSelectors of
+            List when is_list(List) ->
+                length(List);
+            Map when is_map(Map) ->
+                maps:size(Map);
+            _ ->
+                0
+        end,
     case os:type() of
         {unix, linux} ->
             ExternalHelperPath = list_to_binary(
-                code:priv_dir(pact_erlang) ++ "/pact_verifier_exec"
+                code:priv_dir(pact_erlang) ++ "/pact_verifier_external"
             ),
             verify_via_broker_external(
                 Name,
@@ -239,6 +268,7 @@ verify_broker_pacts(
                 TotalConsumerVersionSelectors,
                 Protocol,
                 StatePath,
+                PublishVerificationResults,
                 ExternalHelperPath
             );
         {unix, darwin} ->
@@ -257,7 +287,8 @@ verify_broker_pacts(
                 ConsumerVersionSelectors,
                 TotalConsumerVersionSelectors,
                 Protocol,
-                StatePath
+                StatePath,
+                PublishVerificationResults
             );
         _ ->
             erlang:error({unsupported_os, os:type()})
