@@ -72,7 +72,7 @@ make_json_response(Code, Body) ->
 %% Gen Server
 -type provider() :: binary().
 -type provider_opts() :: map().
--type verfier_ref() :: pid().
+-type verifier_ref() :: pid().
 
 %% erlfmt-ignore
 -record(pact_verifier, {
@@ -105,7 +105,9 @@ start_verifier(Provider, ProviderOpts) ->
         []
     ).
 
--spec verify(verfier_ref()) -> integer().
+%% @doc Verifies pacts for the given provider
+%% Returns 0 if all pacts are verified successfully
+-spec verify(verifier_ref()) -> integer().
 verify(VerifierRef) ->
     {ProviderOpts, ProviderPortDetails} = gen_server:call(VerifierRef, {get_provider_state_details}),
     verify_pacts_internal(VerifierRef, ProviderOpts, ProviderPortDetails).
@@ -122,8 +124,8 @@ get_mfa_from_description(Provider, Description) ->
             ProviderMFA
     end.
 
-stop_verifier(VerfierRef) ->
-    ok = gen_server:stop(VerfierRef).
+stop_verifier(VerifierRef) ->
+    ok = gen_server:stop(VerifierRef).
 
 %% message_providers map example
 %% Sample description to MFA mapping for pact verifier to know which MFA to test

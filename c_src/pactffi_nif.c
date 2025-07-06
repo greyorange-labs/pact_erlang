@@ -857,7 +857,7 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
         enif_free(broker_username); enif_free(broker_password);
         enif_free(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
         enif_free(exec_path);
-        return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_string(env, "mkstemp_config_failed", ERL_NIF_LATIN1));
+        return enif_make_int(env, -1);
     }
 
     // Write config as key=value pairs (one per line)
@@ -890,7 +890,7 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
         enif_free(broker_username); enif_free(broker_password);
         enif_free(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
         enif_free(exec_path);
-        return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_string(env, "mkstemp_result_failed", ERL_NIF_LATIN1));
+        return enif_make_int(env, -1);
     }
     close(result_fd);
 
@@ -943,7 +943,7 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
         enif_free(broker_username); enif_free(broker_password);
         enif_free(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
         enif_free(exec_path);
-        return enif_make_atom(env, "error");
+        return enif_make_int(env, -1);
     }
 }
 

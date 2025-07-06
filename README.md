@@ -755,8 +755,8 @@ ProviderOpts = #{
     publish_verification_results => 1
     %% 1 = publish verification results to broker, otherwise dont publish
 },
-{ok, VerfierRef} = pact_verifier:start_verifier(Name, ProviderOpts),
-Output = pact_verifier:verify(VerfierRef).
+{ok, VerifierRef} = pact_verifier:start_verifier(Name, ProviderOpts),
+Output = pact_verifier:verify(VerifierRef).
 ~~~
 
 ### Matching Request Path and Request/Response Headers, and Body Values
