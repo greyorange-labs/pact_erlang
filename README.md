@@ -422,9 +422,11 @@ pact_source_opts => #{
     broker_username => <<"username">>,
     broker_password => <<"password">>,
     enable_pending => 1,
-    consumer_version_selectors => <<"{}">>  % JSON string
+    consumer_version_selectors => []
 }
 ~~~
+
+For possible values of consumer_version_selectors, check https://docs.pact.io/pact_broker/advanced_topics/consumer_version_selectors
 
 **Message Providers:**
 
@@ -453,7 +455,7 @@ ProviderOpts = #{
         broker_username => <<"pact_user">>,
         broker_password => <<"pact_pass">>,
         enable_pending => 1,
-        consumer_version_selectors => <<"{}">>
+        consumer_version_selectors => [#{<<"matchingBranch">> => true}]
     }
 },
 
@@ -470,15 +472,6 @@ Result = pact_verifier:verify(VerifierRef).
 
 **Returns:** Integer result code (0 = success, non-zero = failure)
 
-#### `pact_verifier:verify_v2/1` - Extended Verification
-
-Runs verification with detailed logging information.
-
-~~~erlang
-{Result, FileLog, BrokerLog} = pact_verifier:verify_v2(VerifierRef).
-~~~
-
-**Returns:** Tuple containing result code and log information
 
 #### `pact_verifier:stop_verifier/1` - Stop Verifier
 
@@ -643,7 +636,8 @@ verify_contracts_test() ->
     {ok, VerifierRef} = pact_verifier:start_verifier(<<"user_service">>, ProviderOpts),
     
     % Run verification
-    {Result, FileLog, _BrokerLog} = pact_verifier:verify_v2(VerifierRef),
+    % This will also log the pact verification results to stdout
+    Result = pact_verifier:verify(VerifierRef),
     
     % Check results
     ?assertEqual(0, Result),  % 0 means success
@@ -745,7 +739,7 @@ BrokerConfigs = #{
     broker_username => <<"pact_workshop">>,
     broker_password => <<"pact_workshop">>,
     enable_pending => 1,
-    consumer_version_selectors => thoas:encode(#{})
+    consumer_version_selectors => []
 },
 ProviderOpts = #{
     name => Name,
@@ -759,12 +753,12 @@ ProviderOpts = #{
         <<"a weather data message">> => {weather_service, generate_message, [23.5, 20, 75.0]}
     },
     fallback_message_provider => {weather_service, generate_message, [24.5, 20, 93.0]},
-    protocol => Protocol
+    protocol => Protocol,
+    publish_verification_results => 1
+    %% 1 = publish verification results to broker, otherwise dont publish
 },
-{ok, VerfierRef} = pact_verifier:start_verifier(Name, ProviderOpts),
-Output = pact_verifier:verify(VerfierRef).
-% or you can use the verify_v2/1 which returns logs of file and url based pacts
-{Output, OutputLog1, OutputLog2} = pact_verifier:verify_v2(VerfierRef)
+{ok, VerifierRef} = pact_verifier:start_verifier(Name, ProviderOpts),
+Output = pact_verifier:verify(VerifierRef).
 ~~~
 
 ### Matching Request Path and Request/Response Headers, and Body Values

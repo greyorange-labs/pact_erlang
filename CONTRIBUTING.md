@@ -92,16 +92,16 @@ We welcome code contributions! Types of contributions include:
 
 ```
 pact_erlang/
-├── src/                    # Erlang source files
-├── c_src/                  # C NIF source files
-│   ├── include/           # C header files
-│   ├── pactffi_nif.c     # Main NIF implementation
-│   ├── pact_verifier_exec.c # Standalone verifier executable
-│   └── Makefile          # C build configuration
-├── test/                   # Test suites
-├── shell_scripts/          # Build and test scripts
-├── priv/                   # Private files (compiled artifacts)
-├── _build/                 # Rebar3 build artifacts
+├── src/                         # Erlang source files
+├── c_src/                       # C NIF source files
+│   ├── include/                 # C header files
+│   ├── pactffi_nif.c            # Main NIF implementation
+│   ├── pact_verifier_external.c # Standalone verifier executable
+│   └── Makefile                 # C build configuration
+├── test/                        # Test suites
+    ├── shell_scripts/           # test scripts
+├── priv/                        # Private files (compiled artifacts)
+├── _build/                      # Rebar3 build artifacts
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
 ├── README.md

@@ -13,7 +13,6 @@
 -export([
     start_verifier/2,
     verify/1,
-    verify_v2/1,
     stop_verifier/1
 ]).
 
@@ -73,7 +72,7 @@ make_json_response(Code, Body) ->
 %% Gen Server
 -type provider() :: binary().
 -type provider_opts() :: map().
--type verfier_ref() :: pid().
+-type verifier_ref() :: pid().
 
 %% erlfmt-ignore
 -record(pact_verifier, {
@@ -106,15 +105,12 @@ start_verifier(Provider, ProviderOpts) ->
         []
     ).
 
--spec verify(verfier_ref()) -> integer().
+%% @doc Verifies pacts for the given provider
+%% Returns 0 if all pacts are verified successfully
+-spec verify(verifier_ref()) -> integer().
 verify(VerifierRef) ->
     {ProviderOpts, ProviderPortDetails} = gen_server:call(VerifierRef, {get_provider_state_details}),
-    verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails).
-
--spec verify_v2(verfier_ref()) -> {integer(), string(), string()}.
-verify_v2(VerifierRef) ->
-    {ProviderOpts, ProviderPortDetails} = gen_server:call(VerifierRef, {get_provider_state_details}),
-    verify_pacts_v2(VerifierRef, ProviderOpts, ProviderPortDetails).
+    verify_pacts_internal(VerifierRef, ProviderOpts, ProviderPortDetails).
 
 -spec get_mfa_from_description(string(), binary()) -> tuple().
 get_mfa_from_description(Provider, Description) ->
@@ -128,8 +124,8 @@ get_mfa_from_description(Provider, Description) ->
             ProviderMFA
     end.
 
-stop_verifier(VerfierRef) ->
-    ok = gen_server:stop(VerfierRef).
+stop_verifier(VerifierRef) ->
+    ok = gen_server:stop(VerifierRef).
 
 %% message_providers map example
 %% Sample description to MFA mapping for pact verifier to know which MFA to test
@@ -175,13 +171,16 @@ verify_pacts_internal(VerifierRef, ProviderOpts, ProviderPortDetails) ->
     Scheme = maps:get(scheme, ProviderOpts, <<"http">>),
     FilePath = maps:get(file_path, PactSourceOpts, undefined),
     PactBrokerUrl = maps:get(broker_url, PactSourceOpts, undefined),
+    %% PublishVerificationResults = 1 means publish verification results
+    %% Otherwise do not publish
+    PublishVerificationResults = maps:get(publish_verification_results, ProviderOpts, 1),
 
-    {Output1, OutputLog1} =
+    OutputFileVerification =
         case FilePath of
             undefined ->
-                {0, ""};
+                0;
             _ ->
-                Output = pactffi_nif:verify_file_pacts(
+                pactffi_nif:verify_file_pacts(
                     Name,
                     Scheme,
                     Host,
@@ -191,15 +190,15 @@ verify_pacts_internal(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                     Branch,
                     FilePath,
                     Protocol,
-                    StateChangeUrl
-                ),
-                {Output, "File verification completed"}
+                    StateChangeUrl,
+                    PublishVerificationResults
+                )
         end,
 
-    {Output2, OutputLog2} =
+    OutputBrokerVerification =
         case PactBrokerUrl of
             undefined ->
-                {0, ""};
+                0;
             _ ->
                 #{
                     broker_username := BrokerUser,
@@ -207,7 +206,7 @@ verify_pacts_internal(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                     enable_pending := EnablePending,
                     consumer_version_selectors := ConsumerVersionSelectors
                 } = PactSourceOpts,
-                Output3 = pactffi_nif:verify_broker_pacts(
+                pactffi_nif:verify_broker_pacts(
                     Name,
                     Scheme,
                     Host,
@@ -221,9 +220,9 @@ verify_pacts_internal(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                     EnablePending,
                     ConsumerVersionSelectors,
                     Protocol,
-                    StateChangeUrl
-                ),
-                {Output3, "Broker verification completed"}
+                    StateChangeUrl,
+                    PublishVerificationResults
+                )
         end,
 
     case Protocol of
@@ -233,16 +232,7 @@ verify_pacts_internal(VerifierRef, ProviderOpts, ProviderPortDetails) ->
         _ ->
             stop_verifier(VerifierRef)
     end,
-    {combine_return_codes(Output1, Output2), OutputLog1, OutputLog2}.
-
-verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
-    {OutputCode, _OutputLog1, _OutputLog2} = verify_pacts_internal(
-        VerifierRef, ProviderOpts, ProviderPortDetails
-    ),
-    OutputCode.
-
-verify_pacts_v2(VerifierRef, ProviderOpts, ProviderPortDetails) ->
-    verify_pacts_internal(VerifierRef, ProviderOpts, ProviderPortDetails).
+    combine_return_codes(OutputFileVerification, OutputBrokerVerification).
 
 combine_return_codes(0, 0) -> 0;
 combine_return_codes(Code1, _) when Code1 =/= 0 -> Code1;
