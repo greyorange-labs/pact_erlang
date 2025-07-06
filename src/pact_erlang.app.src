@@ -1,12 +1,12 @@
 {application, pact_erlang, [
     {description,
         "Erlang wrapper for Pact. Pact is a contract testing framework for HTTP APIs and non-HTTP asynchronous messaging systems."},
-    {vsn, "0.3.0"},
+    {vsn, "0.3.1"},
     {modules, []},
     {registered, []},
     {applications, [kernel, stdlib, thoas, inets]},
     {licenses, ["Apache-2.0"]},
-    {links, [{"GitHub", "https://github.com/greyorange-labs/pact-erlang"}]},
+    {links, [{"GitHub", "https://github.com/greyorange-labs/pact_erlang"}]},
     {build_tools, ["rebar3"]},
     {files, [
         "src",
@@ -15,6 +15,7 @@
         "rebar.lock",
         "README.md",
         "CHANGELOG.md",
+        "ARCHITECTURE.md",
         "LICENSE",
         "Makefile"
     ]},

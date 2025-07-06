@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+
+## [0.3.1] - 2025-07-05
+
 ### Fixed
 
 - **[Important Bugfix]** Unable to verify pacts ([#32](https://github.com/greyorange-labs/pact_erlang/issues/32))
