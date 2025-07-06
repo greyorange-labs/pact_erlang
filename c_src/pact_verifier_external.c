@@ -110,9 +110,9 @@ static void free_string_array(char **array, int count) {
 // Usage: All arguments are read from a config file whose path is in PACT_CONFIG_FILE
 int main() {
     // Read config file path from env
-    const char *config_file = getenv("PACT_CONFIG_FILE");
+    const char *config_file = getenv("PACT_ERLANG_CONFIG_FILE");
     if (!config_file || config_file[0] == '\0') {
-        fprintf(stderr, "PACT_CONFIG_FILE not set\n");
+        fprintf(stderr, "PACT_ERLANG_CONFIG_FILE not set\n");
         return 1;
     }
 
@@ -135,41 +135,45 @@ int main() {
         // Remove trailing newline
         char *nl = strchr(val, '\n');
         if (nl) *nl = '\0';
-        if (strcmp(key, "PACT_NAME") == 0) strncpy(name, val, sizeof(name)-1);
-        else if (strcmp(key, "PACT_SCHEME") == 0) strncpy(scheme, val, sizeof(scheme)-1);
-        else if (strcmp(key, "PACT_HOST") == 0) strncpy(host, val, sizeof(host)-1);
-        else if (strcmp(key, "PACT_PORT") == 0) strncpy(port_str, val, sizeof(port_str)-1);
-        else if (strcmp(key, "PACT_PATH") == 0) strncpy(path, val, sizeof(path)-1);
-        else if (strcmp(key, "PACT_VERSION") == 0) strncpy(version, val, sizeof(version)-1);
-        else if (strcmp(key, "PACT_BRANCH") == 0) strncpy(branch, val, sizeof(branch)-1);
-        else if (strcmp(key, "PACT_BROKER_URL") == 0) strncpy(broker_url, val, sizeof(broker_url)-1);
-        else if (strcmp(key, "PACT_BROKER_USERNAME") == 0) strncpy(broker_username, val, sizeof(broker_username)-1);
-        else if (strcmp(key, "PACT_BROKER_PASSWORD") == 0) strncpy(broker_password, val, sizeof(broker_password)-1);
-        else if (strcmp(key, "PACT_ENABLE_PENDING") == 0) strncpy(enable_pending_str, val, sizeof(enable_pending_str)-1);
-        else if (strcmp(key, "PACT_PROTOCOL") == 0) strncpy(protocol, val, sizeof(protocol)-1);
-        else if (strcmp(key, "PACT_STATE_PATH") == 0) strncpy(state_path, val, sizeof(state_path)-1);
-        else if (strcmp(key, "CONSUMER_VERSION_SELECTORS") == 0) strncpy(consumer_version_selectors, val, sizeof(consumer_version_selectors)-1);
-        else if (strcmp(key, "CONSUMER_VERSION_SELECTORS_LEN") == 0) strncpy(consumer_version_selectors_len_str, val, sizeof(consumer_version_selectors_len_str)-1);
-        else if (strcmp(key, "PACT_PUBLISH_VERIFICATION_RESULTS") == 0) strncpy(publish_verification_results_str, val, sizeof(publish_verification_results_str)-1);
+        if (strcmp(key, "PACT_ERLANG_NAME") == 0) strncpy(name, val, sizeof(name)-1);
+        else if (strcmp(key, "PACT_ERLANG_SCHEME") == 0) strncpy(scheme, val, sizeof(scheme)-1);
+        else if (strcmp(key, "PACT_ERLANG_HOST") == 0) strncpy(host, val, sizeof(host)-1);
+        else if (strcmp(key, "PACT_ERLANG_PORT") == 0) strncpy(port_str, val, sizeof(port_str)-1);
+        else if (strcmp(key, "PACT_ERLANG_PATH") == 0) strncpy(path, val, sizeof(path)-1);
+        else if (strcmp(key, "PACT_ERLANG_VERSION") == 0) strncpy(version, val, sizeof(version)-1);
+        else if (strcmp(key, "PACT_ERLANG_BRANCH") == 0) strncpy(branch, val, sizeof(branch)-1);
+        else if (strcmp(key, "PACT_ERLANG_BROKER_URL") == 0) strncpy(broker_url, val, sizeof(broker_url)-1);
+        else if (strcmp(key, "PACT_ERLANG_BROKER_USERNAME") == 0) strncpy(broker_username, val, sizeof(broker_username)-1);
+        else if (strcmp(key, "PACT_ERLANG_BROKER_PASSWORD") == 0) strncpy(broker_password, val, sizeof(broker_password)-1);
+        else if (strcmp(key, "PACT_ERLANG_ENABLE_PENDING") == 0) strncpy(enable_pending_str, val, sizeof(enable_pending_str)-1);
+        else if (strcmp(key, "PACT_ERLANG_PROTOCOL") == 0) strncpy(protocol, val, sizeof(protocol)-1);
+        else if (strcmp(key, "PACT_ERLANG_STATE_PATH") == 0) strncpy(state_path, val, sizeof(state_path)-1);
+        else if (strcmp(key, "PACT_ERLANG_CONSUMER_VERSION_SELECTORS") == 0) strncpy(consumer_version_selectors, val, sizeof(consumer_version_selectors)-1);
+        else if (strcmp(key, "PACT_ERLANG_CONSUMER_VERSION_SELECTORS_LEN") == 0) strncpy(consumer_version_selectors_len_str, val, sizeof(consumer_version_selectors_len_str)-1);
+        else if (strcmp(key, "PACT_ERLANG_PUBLISH_VERIFICATION_RESULTS") == 0) strncpy(publish_verification_results_str, val, sizeof(publish_verification_results_str)-1);
     }
     fclose(cfp);
 
-    printf("PACT_NAME=%s\n", name);
-    printf("PACT_SCHEME=%s\n", scheme);
-    printf("PACT_HOST=%s\n", host);
-    printf("PACT_PORT=%s\n", port_str);
-    printf("PACT_PATH=%s\n", path);
-    printf("PACT_VERSION=%s\n", version);
-    printf("PACT_BRANCH=%s\n", branch);
-    printf("PACT_BROKER_URL=%s\n", broker_url);
-    printf("PACT_BROKER_USERNAME=%s\n", broker_username);
-    printf("PACT_BROKER_PASSWORD=%s\n", broker_password);
-    printf("PACT_ENABLE_PENDING=%s\n", enable_pending_str);
-    printf("PACT_PROTOCOL=%s\n", protocol);
-    printf("PACT_STATE_PATH=%s\n", state_path);
-    printf("CONSUMER_VERSION_SELECTORS=%s\n", consumer_version_selectors);
-    printf("CONSUMER_VERSION_SELECTORS_LEN=%s\n", consumer_version_selectors_len_str);
-    printf("PACT_PUBLISH_VERIFICATION_RESULTS=%s\n", publish_verification_results_str);
+    // Only print debug info if PACT_ERLANG_DEBUG_ENV_VARS is set to "1"
+    const char *debug_env = getenv("PACT_ERLANG_DEBUG_ENV_VARS");
+    if (debug_env && strcmp(debug_env, "1") == 0) {
+        printf("PACT_ERLANG_NAME=%s\n", name);
+        printf("PACT_ERLANG_SCHEME=%s\n", scheme);
+        printf("PACT_ERLANG_HOST=%s\n", host);
+        printf("PACT_ERLANG_PORT=%s\n", port_str);
+        printf("PACT_ERLANG_PATH=%s\n", path);
+        printf("PACT_ERLANG_VERSION=%s\n", version);
+        printf("PACT_ERLANG_BRANCH=%s\n", branch);
+        printf("PACT_ERLANG_BROKER_URL=%s\n", broker_url);
+        printf("PACT_ERLANG_BROKER_USERNAME=%s\n", broker_username);
+        printf("PACT_ERLANG_BROKER_PASSWORD=%s\n", broker_password);
+        printf("PACT_ERLANG_ENABLE_PENDING=%s\n", enable_pending_str);
+        printf("PACT_ERLANG_PROTOCOL=%s\n", protocol);
+        printf("PACT_ERLANG_STATE_PATH=%s\n", state_path);
+        printf("PACT_ERLANG_CONSUMER_VERSION_SELECTORS=%s\n", consumer_version_selectors);
+        printf("PACT_ERLANG_CONSUMER_VERSION_SELECTORS_LEN=%s\n", consumer_version_selectors_len_str);
+        printf("PACT_ERLANG_PUBLISH_VERIFICATION_RESULTS=%s\n", publish_verification_results_str);
+    }
 
     if (!name[0] || !scheme[0] || !host[0] || !port_str[0] || !path[0] || !version[0] || !branch[0] || !broker_url[0] || !broker_username[0] || !broker_password[0] || !enable_pending_str[0] || !protocol[0] || !consumer_version_selectors_len_str[0] || !publish_verification_results_str[0]) {
         fprintf(stderr, "Missing required config variable(s): ");
@@ -247,8 +251,8 @@ int main() {
         free_string_array(selector_strings, selectors_count);
     }
 
-    // Write verification_output to file if PACT_RESULT_FILE is set, then delete the file
-    const char *result_file = getenv("PACT_RESULT_FILE");
+    // Write verification_output to file if PACT_ERLANG_RESULT_FILE is set, then delete the file
+    const char *result_file = getenv("PACT_ERLANG_RESULT_FILE");
     if (result_file && result_file[0] != '\0') {
         FILE *fp = fopen(result_file, "w");
         if (fp) {

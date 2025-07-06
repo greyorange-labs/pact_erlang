@@ -965,7 +965,7 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
 
     // Create a temp file for config in the current working directory
     char config_file_template[256];
-    snprintf(config_file_template, sizeof(config_file_template), "pact_config_XXXXXX");
+    snprintf(config_file_template, sizeof(config_file_template), "pact_erlang_config_XXXXXX");
     int config_fd = mkstemp(config_file_template);
     if (config_fd == -1) {
         enif_free(name); enif_free(scheme); enif_free(host); enif_free(path);
@@ -977,30 +977,27 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
     }
 
     // Write config as key=value pairs (one per line)
-    dprintf(config_fd, "PACT_NAME=%s\n", name);
-    dprintf(config_fd, "PACT_SCHEME=%s\n", scheme);
-    dprintf(config_fd, "PACT_HOST=%s\n", host);
-    dprintf(config_fd, "PACT_PORT=%d\n", port);
-    dprintf(config_fd, "PACT_PATH=%s\n", path);
-    dprintf(config_fd, "PACT_VERSION=%s\n", version);
-    dprintf(config_fd, "PACT_BRANCH=%s\n", branch);
-    dprintf(config_fd, "PACT_BROKER_URL=%s\n", broker_url);
-    dprintf(config_fd, "PACT_BROKER_USERNAME=%s\n", broker_username);
-    dprintf(config_fd, "PACT_BROKER_PASSWORD=%s\n", broker_password);
-    dprintf(config_fd, "PACT_ENABLE_PENDING=%d\n", enable_pending);
-    dprintf(config_fd, "PACT_PROTOCOL=%s\n", protocol);
-    dprintf(config_fd, "PACT_STATE_PATH=%s\n", state_path);
-    // Reconstruct the consumer version selectors for the external verifier
-    char *selectors_json = reconstruct_json_array(consumer_version_selectors);
-    
-    dprintf(config_fd, "CONSUMER_VERSION_SELECTORS=%s\n", selectors_json ? selectors_json : "[]");
-    dprintf(config_fd, "CONSUMER_VERSION_SELECTORS_LEN=%d\n", consumer_version_selectors_len);
-    dprintf(config_fd, "PACT_PUBLISH_VERIFICATION_RESULTS=%d\n", publish_verification_results);
+    dprintf(config_fd, "PACT_ERLANG_NAME=%s\n", name);
+    dprintf(config_fd, "PACT_ERLANG_SCHEME=%s\n", scheme);
+    dprintf(config_fd, "PACT_ERLANG_HOST=%s\n", host);
+    dprintf(config_fd, "PACT_ERLANG_PORT=%d\n", port);
+    dprintf(config_fd, "PACT_ERLANG_PATH=%s\n", path);
+    dprintf(config_fd, "PACT_ERLANG_VERSION=%s\n", version);
+    dprintf(config_fd, "PACT_ERLANG_BRANCH=%s\n", branch);
+    dprintf(config_fd, "PACT_ERLANG_BROKER_URL=%s\n", broker_url);
+    dprintf(config_fd, "PACT_ERLANG_BROKER_USERNAME=%s\n", broker_username);
+    dprintf(config_fd, "PACT_ERLANG_BROKER_PASSWORD=%s\n", broker_password);
+    dprintf(config_fd, "PACT_ERLANG_ENABLE_PENDING=%d\n", enable_pending);
+    dprintf(config_fd, "PACT_ERLANG_CONSUMER_VERSION_SELECTORS=%s\n", reconstruct_json_array(consumer_version_selectors));
+    dprintf(config_fd, "PACT_ERLANG_CONSUMER_VERSION_SELECTORS_LEN=%d\n", consumer_version_selectors_len);
+    dprintf(config_fd, "PACT_ERLANG_PROTOCOL=%s\n", protocol);
+    dprintf(config_fd, "PACT_ERLANG_STATE_PATH=%s\n", state_path);
+    dprintf(config_fd, "PACT_ERLANG_PUBLISH_VERIFICATION_RESULTS=%d\n", publish_verification_results);
     close(config_fd);
 
     // Create a temp file for result in the current working directory
     char result_file_template[256];
-    snprintf(result_file_template, sizeof(result_file_template), "pact_result_XXXXXX");
+    snprintf(result_file_template, sizeof(result_file_template), "pact_erlang_result_XXXXXX");
     int result_fd = mkstemp(result_file_template);
     if (result_fd == -1) {
         unlink(config_file_template);
@@ -1008,7 +1005,6 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
         enif_free(version); enif_free(branch); enif_free(broker_url);
         enif_free(broker_username); enif_free(broker_password);
         free_char_array(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
-        if (selectors_json) enif_free(selectors_json);
         enif_free(exec_path);
         return enif_make_int(env, -1);
     }
@@ -1016,12 +1012,12 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
 
     // Pass config and result file paths via environment variables
     char *envp[3];
-    size_t sz1 = strlen("PACT_CONFIG_FILE=") + strlen(config_file_template) + 1;
-    size_t sz2 = strlen("PACT_RESULT_FILE=") + strlen(result_file_template) + 1;
+    size_t sz1 = strlen("PACT_ERLANG_CONFIG_FILE=") + strlen(config_file_template) + 1;
+    size_t sz2 = strlen("PACT_ERLANG_RESULT_FILE=") + strlen(result_file_template) + 1;
     envp[0] = malloc(sz1);
     envp[1] = malloc(sz2);
-    snprintf(envp[0], sz1, "PACT_CONFIG_FILE=%s", config_file_template);
-    snprintf(envp[1], sz2, "PACT_RESULT_FILE=%s", result_file_template);
+    snprintf(envp[0], sz1, "PACT_ERLANG_CONFIG_FILE=%s", config_file_template);
+    snprintf(envp[1], sz2, "PACT_ERLANG_RESULT_FILE=%s", result_file_template);
     envp[2] = NULL;
 
     char *const argv_exec[] = {exec_path, NULL};
@@ -1051,7 +1047,6 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
         enif_free(version); enif_free(branch); enif_free(broker_url);
         enif_free(broker_username); enif_free(broker_password);
         free_char_array(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
-        if (selectors_json) enif_free(selectors_json);
         enif_free(exec_path);
         return enif_make_int(env, verification_output);
     } else {
@@ -1063,7 +1058,6 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
         enif_free(version); enif_free(branch); enif_free(broker_url);
         enif_free(broker_username); enif_free(broker_password);
         free_char_array(consumer_version_selectors); enif_free(protocol); enif_free(state_path);
-        if (selectors_json) enif_free(selectors_json);
         enif_free(exec_path);
         return enif_make_int(env, -1);
     }
