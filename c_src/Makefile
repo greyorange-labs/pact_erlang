@@ -58,7 +58,7 @@ compile_commands.json: Makefile
 	@echo "  \"command\": \"$(CC) $(CFLAGS) $(TARGET) $(SRC) -I$(ERTS_INCLUDE_DIR) -I$(PACT_INCLUDE_PATH) $(LIBRARY_PATH)\"" >> compile_commands.json
 	@echo "}]" >> compile_commands.json
 
-$(TARGET): $(SRC) $(LIBRARY_PATH)
+$(TARGET): $(SRC) $(LIBRARY_PATH) $(PACT_INCLUDE_PATH)/pact.h
 	@$(CC) $(CFLAGS) $(TARGET) $(SRC) -I$(ERTS_INCLUDE_DIR) -I$(PACT_INCLUDE_PATH) $(LIBRARY_PATH) -lpthread -ldl
 
 ifeq ($(UNAME),Linux)
@@ -79,6 +79,13 @@ $(PACT_VERSION_FILE):
 	@mkdir -p $(LIBRARY_BASE_PATH)
 	@rm -f $(LIBRARY_BASE_PATH)/.pact-ffi-version-*
 	@touch $(PACT_VERSION_FILE)
+
+$(PACT_INCLUDE_PATH)/pact.h: $(PACT_VERSION_FILE)
+	@mkdir -p $(PACT_INCLUDE_PATH)
+	@rm -f $(PACT_INCLUDE_PATH)/pact.h
+	@echo "Fetching pact.h..."
+	@curl -sS -L $(PACT_H_URL) -o $(PACT_INCLUDE_PATH)/pact.h
+	@echo "Done"
 
 clean:
 	@rm -f $(TARGET)
