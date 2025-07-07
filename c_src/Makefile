@@ -59,11 +59,11 @@ compile_commands.json: Makefile
 	@echo "}]" >> compile_commands.json
 
 $(TARGET): $(SRC) $(LIBRARY_PATH)
-	@$(CC) $(CFLAGS) $(TARGET) $(SRC) -I$(ERTS_INCLUDE_DIR) -I$(PACT_INCLUDE_PATH) $(LIBRARY_PATH)
+	@$(CC) $(CFLAGS) $(TARGET) $(SRC) -I$(ERTS_INCLUDE_DIR) -I$(PACT_INCLUDE_PATH) $(LIBRARY_PATH) -lpthread -ldl
 
 ifeq ($(UNAME),Linux)
 $(PVER_EXEC_BIN): $(PVER_EXEC_SRC) $(LIBRARY_PATH)
-	@$(CC) -o $(PVER_EXEC_BIN) ../c_src/$(PVER_EXEC_SRC) -I../c_src/include $(LIBRARY_PATH) -lm
+	@$(CC) -o $(PVER_EXEC_BIN) ../c_src/$(PVER_EXEC_SRC) -I../c_src/include $(LIBRARY_PATH) -lm -lpthread -ldl
 endif
 
 $(LIBRARY_PATH): $(PACT_VERSION_FILE)
