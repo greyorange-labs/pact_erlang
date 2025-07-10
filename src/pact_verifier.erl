@@ -85,14 +85,21 @@ make_json_response(Code, Body) ->
 -spec start_verifier(provider(), provider_opts()) -> gen_server:start_ret().
 start_verifier(Provider, ProviderOpts) ->
     Protocol = maps:get(protocol, ProviderOpts, <<"http">>),
+    ProviderPort = maps:get(port, ProviderOpts, undefined),
     {Port, HttpPid} =
         case Protocol of
             <<"http">> ->
-                Port1 = maps:get(port, ProviderOpts),
+                Port1 = ProviderPort,
                 {Port1, undefined};
             <<"message">> ->
-                {ok, Port1, HttpPid1} = pact_verifier:start(0, Provider),
-                {Port1, HttpPid1}
+                case ProviderPort of
+                    undefined ->
+                        %% Start a new port for message protocol
+                        {ok, Port1, HttpPid1} = pact_verifier:start(0, Provider),
+                        {Port1, HttpPid1};
+                    Port1 ->
+                        {Port1, undefined}
+                end
         end,
     gen_server:start(
         {global, {?MODULE, Provider}},
@@ -227,7 +234,15 @@ verify_pacts_internal(VerifierRef, ProviderOpts, ProviderPortDetails) ->
 
     case Protocol of
         <<"message">> ->
-            pact_verifier:stop(HttpPid),
+            case HttpPid of
+                undefined ->
+                    %% If HttpPid is undefined, it means we are not using HTTP protocol
+                    %% and we should not stop the HTTP server.
+                    ok;
+                _ ->
+                    %% Stop the HTTP server if it was started for message protocol
+                    pact_verifier:stop(HttpPid)
+            end,
             stop_verifier(VerifierRef);
         _ ->
             stop_verifier(VerifierRef)
