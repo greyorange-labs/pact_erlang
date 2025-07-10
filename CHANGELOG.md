@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Backward compatibility fix for a breaking change introduced in [0.3.1].
 - Compilation issues with older ubuntu versions.
 
+### Added
+
+- Support for verifying message pacts from service's own http endpoint.
+
 ## [0.3.1] - 2025-07-05
 
 ### Fixed
