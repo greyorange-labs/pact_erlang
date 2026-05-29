@@ -14,14 +14,27 @@ PACT_H_URL        := $(PACT_FFI_BASE_URL)/pact.h
 
 ifeq ($(UNAME),Linux)
     CFLAGS := -O2 -Wmissing-prototypes -Wall -shared -o
+    LIBC := $(shell ldd --version 2>&1 | head -1 | grep -qi musl && echo musl || echo glibc)
     ifeq ($(ARCHITECTURE), arm64)
-        PACT_FILE_NAME := libpact_ffi-linux-aarch64.a
+        ifeq ($(LIBC), musl)
+            PACT_FILE_NAME := libpact_ffi-linux-aarch64-musl.a
+        else
+            PACT_FILE_NAME := libpact_ffi-linux-aarch64.a
+        endif
     endif
-	ifeq ($(ARCHITECTURE), aarch64)
-        PACT_FILE_NAME := libpact_ffi-linux-aarch64.a
+    ifeq ($(ARCHITECTURE), aarch64)
+        ifeq ($(LIBC), musl)
+            PACT_FILE_NAME := libpact_ffi-linux-aarch64-musl.a
+        else
+            PACT_FILE_NAME := libpact_ffi-linux-aarch64.a
+        endif
     endif
     ifeq ($(ARCHITECTURE), x86_64)
-        PACT_FILE_NAME := libpact_ffi-linux-x86_64.a
+        ifeq ($(LIBC), musl)
+            PACT_FILE_NAME := libpact_ffi-linux-x86_64-musl.a
+        else
+            PACT_FILE_NAME := libpact_ffi-linux-x86_64.a
+        endif
     endif
 endif
 ifeq ($(UNAME),Darwin)
