@@ -14,7 +14,7 @@ PACT_H_URL        := $(PACT_FFI_BASE_URL)/pact.h
 
 ifeq ($(UNAME),Linux)
     CFLAGS := -O2 -Wmissing-prototypes -Wall -shared -o
-    LIBC := $(shell ldd --version 2>&1 | head -1 | grep -qi musl && echo musl || echo glibc)
+    LIBC := $(shell $(CC) -dumpmachine 2>/dev/null | grep -q musl && echo musl || echo glibc)
     ifeq ($(ARCHITECTURE), arm64)
         ifeq ($(LIBC), musl)
             PACT_FILE_NAME := libpact_ffi-linux-aarch64-musl.a
