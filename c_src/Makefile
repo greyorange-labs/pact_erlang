@@ -21,8 +21,6 @@ endif
 
 ifeq ($(UNAME),Linux)
     CFLAGS := -O2 -Wmissing-prototypes -Wall -shared -o
-    # Detect the target libc from the compiler triple (e.g.
-    # x86_64-alpine-linux-musl -> musl) so we fetch a matching variant.
     LIBC := $(shell $(CC) -dumpmachine 2>/dev/null | grep -q musl && echo musl || echo glibc)
     ifeq ($(LIBC), musl)
         LIBC_SUFFIX := -musl
