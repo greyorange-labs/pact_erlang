@@ -12,7 +12,6 @@ PACT_FFI_VERSION  := 0.4.27
 PACT_FFI_BASE_URL := https://github.com/pact-foundation/pact-reference/releases/download/libpact_ffi-v$(PACT_FFI_VERSION)
 PACT_H_URL        := $(PACT_FFI_BASE_URL)/pact.h
 
-# Normalise the machine arch to pact's naming (arm64/aarch64 -> aarch64).
 ifeq ($(ARCHITECTURE), x86_64)
     PACT_ARCH := x86_64
 else
