@@ -11,7 +11,7 @@ all() -> [{group, consumer}, {group, producer}].
 groups() ->
     [
         {consumer, [animal_consume_message_1, animal_consume_message_2, animal_consume_message_3, animal_consume_message_4]},
-        {producer, [verify_producer]}
+        {producer, [verify_producer, verify_producer_2]}
     ].
 
 
@@ -181,15 +181,35 @@ verify_producer(_Config) ->
     ?assertEqual(1, Output3).
 
 
-
-generate_message(Temperature, WindSpeed, Humidity) ->
-    #{
-        <<"weather">> => #{
-            <<"temperature">> => Temperature,
-            <<"humidity">> => Humidity,
-            <<"wind_speed_kmh">> => WindSpeed
-        },
-        <<"timestamp">> => list_to_binary(
-            calendar:system_time_to_rfc3339(erlang:system_time(second))
-        )
-    }.
+verify_producer_2(_Config) ->
+    {ok, Port, HttpdPid} = weather_service:start(8080),
+    Name = <<"weather_service">>,
+    Version =  <<"default">>,
+    Scheme = <<"http">>,
+    Host = <<"localhost">>,
+    Path = <<"/">>,
+    Branch = <<"develop">>,
+    Protocol = <<"message">>,
+    BrokerUrl = <<"http://localhost:9292/">>,
+    BrokerConfigs = #{
+        broker_url => BrokerUrl,
+        broker_username => <<"pact_workshop">>,
+        broker_password => <<"pact_workshop">>,
+        enable_pending => 1,
+        consumer_version_selectors => thoas:encode(#{})
+    },
+    ProviderOpts = #{
+        name => Name,
+        version => Version,
+        scheme => Scheme,
+        host => Host,
+        base_url => Path,
+        branch => Branch,
+        pact_source_opts => BrokerConfigs,
+        protocol => Protocol,
+        port => Port
+    },
+    {ok, VerifierRef} = pact_verifier:start_verifier(Name, ProviderOpts),
+    Output = pact_verifier:verify(VerifierRef),
+    ?assertEqual(0, Output),
+    weather_service:stop(HttpdPid).
