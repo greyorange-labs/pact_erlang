@@ -12,26 +12,23 @@ PACT_FFI_VERSION  := 0.4.27
 PACT_FFI_BASE_URL := https://github.com/pact-foundation/pact-reference/releases/download/libpact_ffi-v$(PACT_FFI_VERSION)
 PACT_H_URL        := $(PACT_FFI_BASE_URL)/pact.h
 
+ifeq ($(ARCHITECTURE), x86_64)
+    PACT_ARCH := x86_64
+else
+    PACT_ARCH := aarch64
+endif
+
 ifeq ($(UNAME),Linux)
     CFLAGS := -O2 -Wmissing-prototypes -Wall -shared -o
-    ifeq ($(ARCHITECTURE), arm64)
-        PACT_FILE_NAME := libpact_ffi-linux-aarch64.a
+    LIBC := $(shell $(CC) -dumpmachine 2>/dev/null | grep -q musl && echo musl || echo glibc)
+    ifeq ($(LIBC), musl)
+        LIBC_SUFFIX := -musl
     endif
-	ifeq ($(ARCHITECTURE), aarch64)
-        PACT_FILE_NAME := libpact_ffi-linux-aarch64.a
-    endif
-    ifeq ($(ARCHITECTURE), x86_64)
-        PACT_FILE_NAME := libpact_ffi-linux-x86_64.a
-    endif
+    PACT_FILE_NAME := libpact_ffi-linux-$(PACT_ARCH)$(LIBC_SUFFIX).a
 endif
 ifeq ($(UNAME),Darwin)
     CFLAGS := -undefined dynamic_lookup -shared -o
-    ifeq ($(ARCHITECTURE), arm64)
-        PACT_FILE_NAME := libpact_ffi-macos-aarch64.a
-    endif
-    ifeq ($(ARCHITECTURE), x86_64)
-        PACT_FILE_NAME := libpact_ffi-macos-x86_64.a
-    endif
+    PACT_FILE_NAME := libpact_ffi-macos-$(PACT_ARCH).a
 endif
 PACT_FFI_URL := $(PACT_FFI_BASE_URL)/$(PACT_FILE_NAME).gz
 
