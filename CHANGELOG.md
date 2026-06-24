@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-06-24
+
 ### Fixed
 
 - Backward compatibility fix for a breaking change introduced in [0.3.1].
@@ -14,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Support for verifying message pacts from service's own http endpoint.
+- Alpine/musl Linux support: detect musl at build time and select the correct precompiled `libpact_ffi` library ([#61](https://github.com/greyorange-labs/pact_erlang/pull/61)).
 
 ## [0.3.1] - 2025-07-05
 
