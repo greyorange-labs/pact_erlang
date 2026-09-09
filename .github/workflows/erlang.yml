@@ -21,15 +21,15 @@ jobs:
       LATEST_OTP_RELEASE: 26
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
     - name: Setup Erlang
-      uses: erlef/setup-beam@v1
+      uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
       with:
         otp-version: ${{ matrix.otp_version }}
         rebar3-version: '3.22.1'
     - name: Deps cache
       id: cache-deps
-      uses: actions/cache@v3
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: |
           priv
@@ -50,7 +50,7 @@ jobs:
           make checks
         fi
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
       if: matrix.otp_version == env.LATEST_OTP_RELEASE
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -60,7 +60,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
     - name: Brew Version Check
       run: brew --version
     - name: Keep Brew Fresh
@@ -69,7 +69,7 @@ jobs:
       run: brew install erlang rebar3
     - name: Deps cache
       id: cache-deps
-      uses: actions/cache@v3
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: |
           priv
