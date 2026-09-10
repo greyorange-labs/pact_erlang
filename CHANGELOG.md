@@ -13,6 +13,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Introduced support for writing consumer/provider message pact tests
 - Introduced support for pact verification
 
+### Fixed
+
+- Pact verification escript now locates the compiled `pact_erlang` beams
+  relative to its own location, so verification works when the current working
+  directory is not the project root (e.g. under Common Test)
+
 
 ## [0.2.2] - 2023-11-03
 

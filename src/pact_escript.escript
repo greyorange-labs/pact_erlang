@@ -2,9 +2,7 @@
 
 
 main([Module, Function | Args]) ->
-    {ok, Dir} = file:get_cwd(),
-    MixEnv = os:getenv("MIX_ENV", "test"),
-    code:add_pathz(Dir ++ "/_build/" ++ MixEnv ++ "/lib/pact_erlang/ebin"),
+    add_pact_erlang_to_code_path(),
     ModuleAtom = list_to_atom(Module),
     FunctionAtom = list_to_atom(Function),
     ArgsList =
@@ -89,3 +87,22 @@ main([Module, Function | Args]) ->
 main(_) ->
     io:format("Usage: ./script.erl Module Function Arg1 Arg2 ...~n"),
     halt(1).
+
+%% The escript runs as a separate OS process, so it has to put the compiled
+%% pact_erlang beams on its own code path. The script is copied into the
+%% application's priv dir, so `../ebin' relative to the script itself is
+%% correct no matter what the current working directory is. Under Common Test
+%% the cwd is the ct_run log directory, not the project root, which is why a
+%% cwd based path alone does not work. The cwd based path is kept as a
+%% fallback (honouring MIX_ENV) for setups that invoke the script from a
+%% project root with a different layout.
+add_pact_erlang_to_code_path() ->
+    ScriptPrivDir = filename:dirname(filename:absname(escript:script_name())),
+    ScriptRelativeEbin = filename:join(filename:dirname(ScriptPrivDir), "ebin"),
+    {ok, Cwd} = file:get_cwd(),
+    MixEnv = os:getenv("MIX_ENV", "test"),
+    CwdRelativeEbin = filename:join([Cwd, "_build", MixEnv, "lib", "pact_erlang", "ebin"]),
+    lists:foreach(
+        fun(Path) -> code:add_pathz(Path) end,
+        [ScriptRelativeEbin, CwdRelativeEbin]
+    ).
