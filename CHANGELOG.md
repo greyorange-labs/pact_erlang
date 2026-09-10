@@ -18,6 +18,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Pact verification escript now locates the compiled `pact_erlang` beams
   relative to its own location, so verification works when the current working
   directory is not the project root (e.g. under Common Test)
+- Pact verification escript arguments are now passed and quoted individually,
+  so empty arguments (e.g. an unset state change url) no longer disappear and
+  shift every following argument by one
 
 
 ## [0.2.2] - 2023-11-03

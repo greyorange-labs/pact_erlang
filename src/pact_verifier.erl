@@ -191,23 +191,9 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                         Protocol,
                         StateChangeUrl
                     ],
-                FilePathArgsString =
-                    lists:foldl(
-                        fun(Arg, Acc) ->
-                            A =
-                                case Arg of
-                                    X when is_integer(X) ->
-                                        integer_to_list(X);
-                                    _ ->
-                                        binary_to_list(Arg)
-                                end,
-                            Acc ++ " " ++ A
-                        end,
-                        "",
-                        FilePathArgs
-                    ),
                 {FilePathExecOutput, FilePathExecOutputLog} = pact_utils:run_executable_async(
-                    EscriptPath ++ " pactffi_nif verify_file_pacts " ++ FilePathArgsString
+                    EscriptPath,
+                    ["pactffi_nif", "verify_file_pacts" | args_to_strings(FilePathArgs)]
                 ),
                 io:format(FilePathExecOutputLog),
                 FilePathExecOutput
@@ -233,23 +219,9 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                         BrokerPassword,
                         BuildUrl
                     ],
-                PactUrlArgsString =
-                    lists:foldl(
-                        fun(Arg, Acc) ->
-                            A =
-                                case Arg of
-                                    X when is_integer(X) ->
-                                        integer_to_list(X);
-                                    _ ->
-                                        binary_to_list(Arg)
-                                end,
-                            Acc ++ " " ++ A
-                        end,
-                        "",
-                        PactUrlArgs
-                    ),
                 {PactUrlExecOutput, PactUrlExecOutputLog} = pact_utils:run_executable_async(
-                    EscriptPath ++ " pactffi_nif verify_url_pacts " ++ PactUrlArgsString
+                    EscriptPath,
+                    ["pactffi_nif", "verify_url_pacts" | args_to_strings(PactUrlArgs)]
                 ),
                 io:format(PactUrlExecOutputLog),
                 PactUrlExecOutput
@@ -279,23 +251,9 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                     SkipPublish,
                     IncludeWipPactsSince
                 ],
-                PactBrokerArgsString =
-                    lists:foldl(
-                        fun(Arg, Acc) ->
-                            A =
-                                case Arg of
-                                    Y when is_integer(Y) ->
-                                        integer_to_list(Y);
-                                    _ ->
-                                        binary_to_list(Arg)
-                                end,
-                            Acc ++ " " ++ A
-                        end,
-                        "",
-                        PactBrokerArgs
-                    ),
                 {PactBrokerExecOutput, PactBrokerExecOutputLog} = pact_utils:run_executable_async(
-                    EscriptPath ++ " pactffi_nif verify_broker_pacts " ++ PactBrokerArgsString
+                    EscriptPath,
+                    ["pactffi_nif", "verify_broker_pacts" | args_to_strings(PactBrokerArgs)]
                 ),
                 io:format(PactBrokerExecOutputLog),
                 PactBrokerExecOutput
@@ -308,6 +266,18 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
             stop_verifier(VerifierRef)
     end,
     combine_return_codes(FilePathOutput, PactUrlOutput, PactBrokerOutput).
+
+%% Escript arguments are passed as separate, individually quoted strings so
+%% that empty arguments keep their position instead of being swallowed by the
+%% shell, which would shift every following argument by one.
+args_to_strings(Args) ->
+    [
+        case Arg of
+            Int when is_integer(Int) -> integer_to_list(Int);
+            Bin -> binary_to_list(Bin)
+        end
+     || Arg <- Args
+    ].
 
 combine_return_codes(0, 0, 0) -> 0;
 combine_return_codes(Code1, _, _) when Code1 =/= 0 -> Code1;
