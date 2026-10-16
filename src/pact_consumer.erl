@@ -33,14 +33,24 @@ msg_interaction(PactPid, Interaction) ->
 
 -spec verify_interaction(pact_pid()) -> {ok, matched} | {error, not_matched}.
 verify_interaction(PactPid) ->
-    MockServerPort = pact_ref_server:get_mock_server_port(PactPid),
-    pactffi_nif:mock_server_matched(MockServerPort).
+    case pact_ref_server:get_mock_server_port(PactPid) of
+        %% The mock server was already cleaned up (e.g. by write/2)
+        undefined ->
+            {error, not_matched};
+        MockServerPort ->
+            pactffi_nif:mock_server_matched(MockServerPort)
+    end.
 
 -spec write_interaction(pact_pid(), binary()) -> ok.
 write_interaction(PactPid, Path) ->
-    PactRef = pact_ref_server:get_pact_ref(PactPid),
-    pactffi_nif:pact_handle_write_file(PactRef, Path, 0),
-    pact_consumer_http:cleanup_interaction(PactPid).
+    case pact_ref_server:get_pact_ref(PactPid) of
+        %% The pact was already written and cleaned up
+        undefined ->
+            ok;
+        PactRef ->
+            pactffi_nif:pact_handle_write_file(PactRef, Path, 0),
+            pact_consumer_http:cleanup_interaction(PactPid)
+    end.
 
 -spec cleanup(pact_pid()) -> ok.
 cleanup(PactPid) ->

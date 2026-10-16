@@ -33,15 +33,22 @@ interaction(PactPid, Interaction) ->
 
 -spec cleanup_interaction(pact_pid()) -> ok.
 cleanup_interaction(PactPid) ->
-    PactRef = pact_ref_server:get_pact_ref(PactPid),
-    MockServerPort = pact_ref_server:get_mock_server_port(PactPid),
-    case MockServerPort of
+    %% Reset the refs after freeing them, so a later cleanup (e.g. write/2 followed by
+    %% cleanup/1) doesn't free the same mock server or pact handle twice
+    case pact_ref_server:get_mock_server_port(PactPid) of
         undefined ->
             ok;
-        _ ->
-            ok = pactffi_nif:cleanup_mock_server(MockServerPort)
+        MockServerPort ->
+            ok = pactffi_nif:cleanup_mock_server(MockServerPort),
+            ok = pact_ref_server:set_mock_server_port(PactPid, undefined)
     end,
-    pactffi_nif:free_pact_handle(PactRef).
+    case pact_ref_server:get_pact_ref(PactPid) of
+        undefined ->
+            ok;
+        PactRef ->
+            ok = pactffi_nif:free_pact_handle(PactRef),
+            ok = pact_ref_server:set_pact_ref(PactPid, undefined)
+    end.
 
 %% Internal functions
 

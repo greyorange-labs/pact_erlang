@@ -1063,6 +1063,159 @@ static ERL_NIF_TERM verify_via_broker_external(ErlNifEnv *env, int argc, const E
     }
 }
 
+// Builds {error, Code, Message} from the pact_ffi LAST_ERROR. LAST_ERROR is thread local,
+// so this must be called from the same NIF call that got the error.
+static ERL_NIF_TERM make_error_with_last_message(ErlNifEnv *env, unsigned int code)
+{
+    char buffer[4096];
+    size_t length = 0;
+    if (pactffi_get_error_message(buffer, sizeof(buffer)) > 0)
+    {
+        length = strlen(buffer);
+    }
+    ERL_NIF_TERM message;
+    unsigned char *data = enif_make_new_binary(env, length, &message);
+    memcpy(data, buffer, length);
+    return enif_make_tuple3(env, enif_make_atom(env, "error"), enif_make_uint(env, code), message);
+}
+
+static ERL_NIF_TERM with_specification(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    PactHandle pacthandle = convert_erl_int_to_c_int(env, argv[0]);
+    if (!enif_is_number(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+    int specification = convert_erl_int_to_c_int(env, argv[1]);
+    if (pactffi_with_specification(pacthandle, specification))
+    {
+        return enif_make_tuple2(env, enif_make_atom(env, "ok"), enif_make_atom(env, "specification_set"));
+    }
+    else
+    {
+        return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_atom(env, "cannot_set_specification"));
+    }
+}
+
+static ERL_NIF_TERM using_plugin(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    PactHandle pacthandle = convert_erl_int_to_c_int(env, argv[0]);
+    if (!enif_is_binary(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+    if (!enif_is_binary(env, argv[2]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *plugin_name = convert_erl_binary_to_c_string(env, argv[1]);
+    char *plugin_version = convert_erl_binary_to_c_string(env, argv[2]);
+    // An empty version means "latest installed version"
+    unsigned int result = pactffi_using_plugin(pacthandle, plugin_name, plugin_version[0] == '\0' ? NULL : plugin_version);
+    enif_free(plugin_name);
+    enif_free(plugin_version);
+    if (result == 0)
+    {
+        return enif_make_atom(env, "ok");
+    }
+    return make_error_with_last_message(env, result);
+}
+
+static ERL_NIF_TERM cleanup_plugins(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    PactHandle pacthandle = convert_erl_int_to_c_int(env, argv[0]);
+    pactffi_cleanup_plugins(pacthandle);
+    return enif_make_atom(env, "ok");
+}
+
+static ERL_NIF_TERM interaction_contents(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    InteractionHandle interactionhandle = convert_erl_int_to_c_int(env, argv[0]);
+    if (!enif_is_number(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+    int interaction_part = convert_erl_int_to_c_int(env, argv[1]);
+    if (!enif_is_binary(env, argv[2]))
+    {
+        return enif_make_badarg(env);
+    }
+    if (!enif_is_binary(env, argv[3]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *content_type = convert_erl_binary_to_c_string(env, argv[2]);
+    char *contents = convert_erl_binary_to_c_string(env, argv[3]);
+    unsigned int result = pactffi_interaction_contents(interactionhandle, interaction_part, content_type, contents);
+    enif_free(content_type);
+    enif_free(contents);
+    if (result == 0)
+    {
+        return enif_make_atom(env, "ok");
+    }
+    return make_error_with_last_message(env, result);
+}
+
+static ERL_NIF_TERM new_sync_message_interaction(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    PactHandle pacthandle = convert_erl_int_to_c_int(env, argv[0]);
+    if (!enif_is_binary(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *interaction_desc = convert_erl_binary_to_c_string(env, argv[1]);
+    InteractionHandle interactionhandle = pactffi_new_sync_message_interaction(pacthandle, interaction_desc);
+    enif_free(interaction_desc);
+
+    return enif_make_int(env, interactionhandle);
+}
+
+static ERL_NIF_TERM write_pact_file(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_number(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    int mock_server_port = convert_erl_int_to_c_int(env, argv[0]);
+    if (!enif_is_binary(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+    if (!enif_is_number(env, argv[2]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *pact_dir = convert_erl_binary_to_c_string(env, argv[1]);
+    bool overwrite = convert_erl_int_to_c_int(env, argv[2]) != 0;
+    int result = pactffi_write_pact_file(mock_server_port, pact_dir, overwrite);
+    enif_free(pact_dir);
+    if (result == 0)
+    {
+        return enif_make_atom(env, "ok");
+    }
+    return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_int(env, result));
+}
+
 static ErlNifFunc nif_funcs[] =
     {
         {"version", 0, version},
@@ -1076,12 +1229,13 @@ static ErlNifFunc nif_funcs[] =
         {"with_header_v2", 5, with_header_v2},
         {"with_body", 4, with_body},
         {"response_status", 2, response_status},
-        {"create_mock_server_for_transport", 4, create_mock_server_for_transport},
-        {"mock_server_matched", 1, mock_server_matched},
-        {"mock_server_mismatches", 1, mock_server_mismatches},
+        // Mock server calls are dirty because plugin based mock servers (e.g. gRPC) block on calls to the plugin
+        {"create_mock_server_for_transport", 4, create_mock_server_for_transport, ERL_NIF_DIRTY_JOB_IO_BOUND},
+        {"mock_server_matched", 1, mock_server_matched, ERL_NIF_DIRTY_JOB_IO_BOUND},
+        {"mock_server_mismatches", 1, mock_server_mismatches, ERL_NIF_DIRTY_JOB_IO_BOUND},
         {"log_to_file", 2, log_to_file},
         {"pact_handle_write_file", 3, pact_handle_write_file},
-        {"cleanup_mock_server", 1, cleanup_mock_server},
+        {"cleanup_mock_server", 1, cleanup_mock_server, ERL_NIF_DIRTY_JOB_IO_BOUND},
         {"free_pact_handle", 1, free_pact_handle},
         {"with_query_parameter_v2", 4, with_query_parameter_v2},
         {"given", 2, given},
@@ -1091,6 +1245,13 @@ static ErlNifFunc nif_funcs[] =
         {"msg_given_with_param", 4, msg_given_with_param},
         {"msg_with_contents", 3, msg_with_contents},
         {"reify_message", 1, reify_message},
+        {"with_specification", 2, with_specification},
+        // Plugin calls spawn the plugin process and make gRPC calls to it, so they can block for seconds
+        {"using_plugin", 3, using_plugin, ERL_NIF_DIRTY_JOB_IO_BOUND},
+        {"cleanup_plugins", 1, cleanup_plugins, ERL_NIF_DIRTY_JOB_IO_BOUND},
+        {"interaction_contents", 4, interaction_contents, ERL_NIF_DIRTY_JOB_IO_BOUND},
+        {"new_sync_message_interaction", 2, new_sync_message_interaction},
+        {"write_pact_file", 3, write_pact_file, ERL_NIF_DIRTY_JOB_IO_BOUND},
         {"verify_via_file_direct", 11, verify_via_file_direct, ERL_NIF_DIRTY_JOB_IO_BOUND},
         {"verify_via_broker_direct", 16, verify_via_broker_direct, ERL_NIF_DIRTY_JOB_IO_BOUND},
         {"verify_via_broker_external", 17, verify_via_broker_external, ERL_NIF_DIRTY_JOB_IO_BOUND}

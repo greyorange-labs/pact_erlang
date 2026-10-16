@@ -33,6 +33,12 @@
     msg_given_with_param/4,
     msg_with_contents/3,
     reify_message/1,
+    with_specification/2,
+    using_plugin/3,
+    cleanup_plugins/1,
+    interaction_contents/4,
+    new_sync_message_interaction/2,
+    write_pact_file/3,
     get_reified_message/1,
     verify_file_pacts/11,
     verify_broker_pacts/15
@@ -66,6 +72,12 @@
     msg_given_with_param/4,
     msg_with_contents/3,
     reify_message/1,
+    with_specification/2,
+    using_plugin/3,
+    cleanup_plugins/1,
+    interaction_contents/4,
+    new_sync_message_interaction/2,
+    write_pact_file/3,
     verify_via_broker_direct/16,
     verify_via_broker_external/17,
     verify_via_file_direct/11
@@ -179,6 +191,24 @@ msg_with_contents(_, _, _) ->
     erlang:nif_error("NIF library not loaded").
 
 reify_message(_) ->
+    erlang:nif_error("NIF library not loaded").
+
+with_specification(_, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+using_plugin(_, _, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+cleanup_plugins(_) ->
+    erlang:nif_error("NIF library not loaded").
+
+interaction_contents(_, _, _, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+new_sync_message_interaction(_, _) ->
+    erlang:nif_error("NIF library not loaded").
+
+write_pact_file(_, _, _) ->
     erlang:nif_error("NIF library not loaded").
 
 verify_via_file_direct(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11) ->
